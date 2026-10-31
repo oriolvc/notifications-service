@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.shared.auditing;
 
+import com.oriolvc.notificationsservice.shared.domain.AuditMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
@@ -13,12 +14,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * The {@code created_at/by} and {@code updated_at/by} columns, filled by Spring Data auditing. {@code @Audited} so
- * that Envers also stores them for subclasses that are themselves {@code @Audited}.
+ * that Envers also stores them for DBOs that are themselves {@code @Audited}.
  */
 @MappedSuperclass
 @Audited
 @EntityListeners(AuditingEntityListener.class)
-public abstract class AuditedEntity {
+public abstract class AuditedDbo {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -50,5 +51,9 @@ public abstract class AuditedEntity {
 
     public String updatedBy() {
         return updatedBy;
+    }
+
+    public AuditMetadata auditMetadata() {
+        return new AuditMetadata(createdAt, createdBy, updatedAt, updatedBy);
     }
 }

@@ -42,6 +42,15 @@ class AuditingTest {
     }
 
     @Test
+    void auditTimestampsAreTruncatedToWhatPostgresStores() {
+        Instant now = Instant.parse("2026-10-31T10:00:00.123456789Z");
+
+        assertThat(config.auditingDateTimeProvider(Clock.fixed(now, ZoneOffset.UTC))
+                        .getNow())
+                .contains(Instant.parse("2026-10-31T10:00:00.123456Z"));
+    }
+
+    @Test
     void enversRevisionsStoreTheSameUserId() throws Exception {
         authenticateAs("alice");
         var constructor = RevisionInfo.class.getDeclaredConstructor();

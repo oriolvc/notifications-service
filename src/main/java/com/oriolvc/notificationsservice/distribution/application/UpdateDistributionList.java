@@ -33,6 +33,6 @@ public class UpdateDistributionList {
         } else if (Boolean.FALSE.equals(command.active())) {
             list.deactivate();
         }
-        return views.of(lists.saveAndFlush(list));
+        return views.of(lists.save(list));
     }
 }

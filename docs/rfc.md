@@ -82,7 +82,9 @@ Single deployable, **hexagonal architecture**, two bounded contexts:
 
 The Notification context reads recipients through a port (`RecipientResolver`) implemented by an adapter over the Distribution context's application service. There is no direct repository access across contexts.
 
-Package layout per context: `domain` (entities, value objects, ports) · `application` (use cases) · `infrastructure` (web, persistence, email, scheduling).
+Package layout per context: `domain` (aggregates, value objects, ports; plain Java) · `application` (use cases) · `infrastructure` (web, persistence, email, scheduling).
+
+The persistence model is separate from the domain model: JPA/Envers mapping lives in DBOs in `infrastructure/persistence`, queried through Spring Data DAOs. A repository adapter implements each domain repository interface by calling its DAO and mapping DBO ↔ aggregate, so the domain carries no persistence annotations.
 
 Channel extension point:
 
@@ -355,7 +357,7 @@ Result:
 
 ## 10. Data model
 
-Conventions: bigserial PKs: `bigint` with `DEFAULT nextval('<table>_<column>_seq')`, a sequence per table incrementing by 1 and owned by the column (no identity columns). Entities use `GenerationType.SEQUENCE` with that sequence and `allocationSize = 1`. All mutable tables have `created_at`, `created_by`, `updated_at`, `updated_by` (Spring Data auditing; `AuditorAware` = `userId` or service client id from the JWT) and `version` for optimistic locking. `channel` is `text` with a `CHECK (channel IN ('EMAIL'))` constraint, widened by migration when a channel is added.
+Conventions: bigserial PKs: `bigint` with `DEFAULT nextval('<table>_<column>_seq')`, a sequence per table incrementing by 1 and owned by the column (no identity columns). DBOs use `GenerationType.SEQUENCE` with that sequence and `allocationSize = 1`. All mutable tables have `created_at`, `created_by`, `updated_at`, `updated_by` (Spring Data auditing; `AuditorAware` = `userId` or service client id from the JWT; timestamps truncated to microseconds, Postgres' precision) and `version` for optimistic locking. `channel` is `text` with a `CHECK (channel IN ('EMAIL'))` constraint, widened by migration when a channel is added.
 
 ```
 Table notification_types {               // seeded by Liquibase

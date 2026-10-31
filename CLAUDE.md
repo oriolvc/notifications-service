@@ -46,7 +46,7 @@ com.oriolvc.notificationsservice
 │   ├── application/           use cases, commands, query services
 │   └── infrastructure/
 │       ├── web/               controllers implementing generated API interfaces + DTO mappers
-│       └── persistence/       Spring Data repositories
+│       └── persistence/       DBOs, DAOs and the domain repository implementations
 ├── notification/              types, templates, notifications, deliveries, dispatch
 │   ├── domain/
 │   ├── application/           incl. ports: RecipientResolver, ChannelSender
@@ -62,7 +62,12 @@ com.oriolvc.notificationsservice
 Rules:
 - Dependencies point inward: `infrastructure → application → domain`.
 - `notification` reaches `distribution` **only** through the `RecipientResolver` port. Never import `distribution.domain` or its repositories from `notification`. The reverse direction (validating a notification type code) goes through a query service in `notification.application`.
-- **Pragmatic persistence:** aggregates are JPA entities (JPA and Envers annotations are allowed in `domain`), so there is no separate persistence model. Domain repository interfaces are plain Java; the Spring Data interfaces in `infrastructure/persistence` extend them.
+- **Separate persistence model:** `domain` is plain Java, with no JPA, Envers or Spring Data annotations. Per aggregate, `infrastructure/persistence` holds (all package-private):
+  - `XxxDbo`: the `@Entity` (`@Audited`, `@Version`, audit columns via `AuditedDbo`)
+  - `XxxDao`: the Spring Data interface over the DBO; it runs the queries
+  - `XxxDboMapper`: domain ↔ DBO
+  - `JpaXxxRepository`: implements the domain repository interface by calling the DAO and mapping. On save it loads the current row, checks the version the aggregate was read at, copies the state onto it and `saveAndFlush`es; it returns the aggregate as stored (id, version, `AuditMetadata`).
+  Aggregates are rebuilt with a `restore(...)` factory, which skips the validation of `create(...)`.
 - Aggregates protect their invariants: no public setters, static factories, intention-revealing methods (`deactivate()`, `addMember(...)`).
 - **Use cases:** one class per use case, `@Transactional`, a single public method `execute(Command)`. Commands and results are records.
 - Generated OpenAPI code (DTOs, interfaces) never leaks past `infrastructure/web`.
@@ -91,14 +96,14 @@ Rules:
 - Changesets go in `db/changelog/changes/NNN-description.yaml`, included from `db.changelog-master.yaml`. **Never edit an applied changeset**; add a new one. Envers `revinfo` and `_aud` tables are Liquibase too.
 - Tables and columns are snake_case (tables plural). Enums are stored as `text` with a `CHECK` constraint.
 - Primary keys are bigserial: a `bigint` column with `DEFAULT nextval('<table>_<column>_seq')` and its own sequence (increment 1, `OWNED BY` the column). Liquibase turns `type: bigserial`/`autoIncrement` into an identity column on Postgres, so write the `createSequence` + `defaultValueSequenceNext` + `ALTER SEQUENCE … OWNED BY` explicitly (see `001-create-notification-types.yaml`). Never use identity columns.
-- Entities map ids with that sequence and `allocationSize = 1` (never `IDENTITY`, never the default 50):
+- DBOs map ids with that sequence and `allocationSize = 1` (never `IDENTITY`, never the default 50):
   ```java
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "distribution_lists_id_seq")
   @SequenceGenerator(name = "distribution_lists_id_seq", sequenceName = "distribution_lists_id_seq", allocationSize = 1)
   private Long id;
   ```
-- Uniqueness rules live in unique constraints/indexes only; don't check them in the use case. `saveAndFlush` and let the error handler map the unique violation to 409 `already-exists`.
+- Uniqueness rules live in unique constraints/indexes only; don't check them in the use case. Save (the repository flushes) and let the error handler map the unique violation to 409 `already-exists`.
 - Lists and members are soft deleted only (`active = false`). Optimistic locking uses `@Version`; a stale version returns 409.
 - Audit columns come from Spring Data auditing (`AuditorAware` = JWT `userId`, or the client id for service tokens). Envers revisions store the same user id.
 

@@ -24,9 +24,9 @@ public record DistributionListView(
                 list.channel(),
                 list.isActive(),
                 list.version(),
-                list.createdAt(),
-                list.createdBy(),
-                list.updatedAt(),
-                list.updatedBy());
+                list.audit().createdAt(),
+                list.audit().createdBy(),
+                list.audit().updatedAt(),
+                list.audit().updatedBy());
     }
 }

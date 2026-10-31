@@ -6,5 +6,5 @@ public interface NotificationTypeRepository {
 
     Optional<NotificationType> findByCode(String code);
 
-    Optional<NotificationType> findById(Long id);
+    Optional<NotificationType> findById(long id);
 }

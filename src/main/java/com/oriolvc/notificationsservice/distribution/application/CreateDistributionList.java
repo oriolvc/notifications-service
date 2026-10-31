@@ -34,6 +34,6 @@ public class CreateDistributionList {
         // Duplicate names and a second active list are rejected by the unique constraints (409)
         DistributionList list = DistributionList.create(
                 command.tenantId(), DistributionList.normalizeName(command.name()), type.id(), command.channel());
-        return views.of(lists.saveAndFlush(list));
+        return views.of(lists.save(list));
     }
 }

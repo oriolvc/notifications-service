@@ -7,12 +7,13 @@ import java.util.Optional;
 public interface DistributionListRepository {
 
     /**
-     * Saves and flushes, so the new version is in the response and unique-constraint violations surface as a
-     * {@code DataIntegrityViolationException} (409).
+     * Saves the list and returns it as stored, with its id, new version and audit data. Writes immediately, so a
+     * unique-constraint violation surfaces as a {@code DataIntegrityViolationException} (409) and a list changed since
+     * it was read as an {@code ObjectOptimisticLockingFailureException} (409).
      */
-    DistributionList saveAndFlush(DistributionList list);
+    DistributionList save(DistributionList list);
 
-    Optional<DistributionList> findByIdAndCustomerId(Long id, long customerId);
+    Optional<DistributionList> findByIdAndCustomerId(long id, long customerId);
 
     List<DistributionList> findAllByCustomerIdOrderByIdAsc(long customerId);
 }

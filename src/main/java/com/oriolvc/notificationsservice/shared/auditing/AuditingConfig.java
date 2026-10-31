@@ -1,6 +1,7 @@
 package com.oriolvc.notificationsservice.shared.auditing;
 
 import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +19,9 @@ class AuditingConfig {
         return () -> Optional.of(Auditor.current());
     }
 
+    /** Truncated to what Postgres stores, so the saved copy and a later read carry the same timestamps. */
     @Bean
     DateTimeProvider auditingDateTimeProvider(Clock clock) {
-        return () -> Optional.of(clock.instant());
+        return () -> Optional.of(clock.instant().truncatedTo(ChronoUnit.MICROS));
     }
 }

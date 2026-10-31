@@ -1,74 +1,63 @@
 package com.oriolvc.notificationsservice.distribution.domain;
 
-import com.oriolvc.notificationsservice.shared.auditing.AuditedEntity;
+import com.oriolvc.notificationsservice.shared.domain.AuditMetadata;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import com.oriolvc.notificationsservice.shared.error.VersionConflictException;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import java.util.Objects;
-import org.hibernate.envers.Audited;
 
 /**
  * A customer's distribution list for one notification type and channel. Never hard-deleted: deactivation keeps it,
  * its members and the deliveries that reference them (D-5). At most one active list per (customer, type, channel)
- * (A-13), enforced by the use cases and by a partial unique index.
+ * (A-13), enforced by a partial unique index.
  */
-@Entity
-@Audited
-@Table(name = "distribution_lists")
-public class DistributionList extends AuditedEntity {
+public class DistributionList {
 
     public static final int MAX_NAME_LENGTH = 200;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "distribution_lists_id_seq")
-    @SequenceGenerator(
-            name = "distribution_lists_id_seq",
-            sequenceName = "distribution_lists_id_seq",
-            allocationSize = 1)
-    @Column(name = "id")
-    private Long id;
-
-    @Column(name = "customer_id", nullable = false, updatable = false)
-    private long customerId;
-
-    @Column(name = "name", nullable = false)
+    private final Long id;
+    private final long customerId;
     private String name;
-
-    @Column(name = "notification_type_id", nullable = false, updatable = false)
-    private long notificationTypeId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "channel", nullable = false, updatable = false)
-    private Channel channel;
-
-    @Column(name = "active", nullable = false)
+    private final long notificationTypeId;
+    private final Channel channel;
     private boolean active;
+    private final long version;
+    private final AuditMetadata audit;
 
-    @Version
-    @Column(name = "version", nullable = false)
-    private long version;
-
-    protected DistributionList() {}
-
-    private DistributionList(long customerId, String name, long notificationTypeId, Channel channel) {
+    private DistributionList(
+            Long id,
+            long customerId,
+            String name,
+            long notificationTypeId,
+            Channel channel,
+            boolean active,
+            long version,
+            AuditMetadata audit) {
+        this.id = id;
         this.customerId = customerId;
-        this.name = validName(name);
+        this.name = name;
         this.notificationTypeId = notificationTypeId;
         this.channel = Objects.requireNonNull(channel, "channel");
-        this.active = true;
+        this.active = active;
+        this.version = version;
+        this.audit = audit;
     }
 
     public static DistributionList create(long customerId, String name, long notificationTypeId, Channel channel) {
-        return new DistributionList(customerId, name, notificationTypeId, channel);
+        return new DistributionList(null, customerId, validName(name), notificationTypeId, channel, true, 0, null);
+    }
+
+    /** Rebuilds a stored list as it was saved; used by the persistence adapter. */
+    public static DistributionList restore(
+            long id,
+            long customerId,
+            String name,
+            long notificationTypeId,
+            Channel channel,
+            boolean active,
+            long version,
+            AuditMetadata audit) {
+        return new DistributionList(
+                id, customerId, name, notificationTypeId, channel, active, version, Objects.requireNonNull(audit));
     }
 
     /** Optimistic locking for client edits: the client must have read the current version. */
@@ -104,6 +93,7 @@ public class DistributionList extends AuditedEntity {
         return normalized;
     }
 
+    /** {@code null} until the list is saved. */
     public Long id() {
         return id;
     }
@@ -128,7 +118,13 @@ public class DistributionList extends AuditedEntity {
         return active;
     }
 
+    /** The version this list was read at; the saved copy carries the next one. */
     public long version() {
         return version;
+    }
+
+    /** {@code null} until the list is saved. */
+    public AuditMetadata audit() {
+        return audit;
     }
 }

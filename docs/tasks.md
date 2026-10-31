@@ -105,7 +105,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Goal:** tenant-scoped CRUD for distribution lists. RFC §6.2, A-4, A-13, D-5.
 
-- Minimal read-only notification type catalog in `notification` (entity + repository + `NotificationTypeQuery.findActiveByCode`), used to validate the list's type. T6 extends it.
+- Minimal read-only notification type catalog in `notification` (DBO + DAO + repository + `NotificationTypeQuery.findActiveByCode`), used to validate the list's type. T6 extends it.
 - `DistributionList` aggregate:
   - `@Audited`
   - optimistic locking

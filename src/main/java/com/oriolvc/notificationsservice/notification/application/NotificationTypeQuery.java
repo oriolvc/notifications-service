@@ -18,7 +18,7 @@ public class NotificationTypeQuery {
     }
 
     public Optional<NotificationTypeRef> findActiveByCode(String code) {
-        return types.findByCode(code).filter(NotificationType::isActive).map(NotificationTypeQuery::toRef);
+        return types.findByCode(code).filter(NotificationType::active).map(NotificationTypeQuery::toRef);
     }
 
     /** Any type, active or not: existing lists keep referencing a type that was deactivated. */

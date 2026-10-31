@@ -22,7 +22,7 @@ public class DeleteDistributionList {
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));
         if (list.isActive()) {
             list.deactivate();
-            lists.saveAndFlush(list);
+            lists.save(list);
         }
     }
 }
