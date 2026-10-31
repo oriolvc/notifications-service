@@ -76,6 +76,9 @@ Rules:
 
 **API (contract-first)**
 - `src/main/resources/openapi/notifications-service.yaml` (OpenAPI 3.1) is the source of truth. Change the spec first, regenerate, then implement.
+- Write schemas both validators read the same way: the generated DTOs use Bean Validation and the tests use JSON Schema.
+  - Anchor every `pattern` (`'^…$'`): `@Pattern` must match the whole string, JSON Schema only part of it.
+  - No `allOf` in response schemas: the contract validator rejects each part's properties as unknown to the others. Repeat the fields.
 - Parameter schemas live in `src/main/resources/schemas/<type>.vN.json`. The spec `$ref`s them and Liquibase loads them (`valueClobFile`). **Never edit an existing `vN`**; add `vN+1` (RFC §6.3).
 - Errors are RFC 9457 `ProblemDetail`, built by one `@RestControllerAdvice` with stable `type` URIs:
   - 400: malformed request

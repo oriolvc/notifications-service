@@ -217,6 +217,8 @@ Every error is an RFC 9457 Problem Detail (`application/problem+json`) built in 
 | GET | `/distribution-lists/{id}/members` | |
 | DELETE | `/distribution-lists/{id}/members/{memberId}` | Soft delete → 204 |
 
+List names are trimmed and unique per tenant (exact match, inactive lists included) → 409 `already-exists`. An unknown or inactive `notificationType` → 422. `DELETE` is idempotent: deleting an inactive list returns 204 and changes nothing. The 409 checks run in the use case; the unique indexes are the backstop for concurrent requests and are translated to the same 409.
+
 There is no member PATCH: changing an address is a remove plus an add. This keeps the audit trail unambiguous.
 Limit: 100 active members per list. Adding a member beyond it → 422 (a business rule, not a conflict with another resource).
 Reactivating a list (`PATCH active=true`) while another active list exists for the same (type, channel) → 409.

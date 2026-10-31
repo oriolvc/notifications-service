@@ -101,7 +101,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** unauthenticated → 401 and wrong role → 403 on protected paths (generated interfaces return 501 for the rest). Covers **AC-17**.
 
-## [ ] T4 — Distribution lists
+## [x] T4 — Distribution lists
 
 **Goal:** tenant-scoped CRUD for distribution lists. RFC §6.2, A-4, A-13, D-5.
 

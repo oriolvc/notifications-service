@@ -502,15 +502,6 @@ components:
     Channel:
       type: string
       enum: [EMAIL]
-    AuditInfo:
-      type: object
-      required: [createdAt, createdBy, updatedAt, updatedBy]
-      properties:
-        createdAt: { type: string, format: date-time }
-        createdBy: { type: string }
-        updatedAt: { type: string, format: date-time }
-        updatedBy: { type: string }
-
     Problem:
       description: RFC 9457 Problem Details.
       type: object
@@ -727,9 +718,11 @@ components:
 
     # ---------- Distribution lists ----------
     ListName:
+      description: Unique within the tenant. Leading and trailing spaces are removed.
       type: string
       minLength: 1
       maxLength: 200
+      pattern: '^.*\S.*$'
     CreateDistributionListRequest:
       type: object
       additionalProperties: false
@@ -757,25 +750,27 @@ components:
           format: int64
           minimum: 0
     DistributionList:
-      allOf:
-        - type: object
-          required: [id, name, notificationType, channel, active, version]
-          properties:
-            id:
-              $ref: '#/components/schemas/Id'
-            name:
-              $ref: '#/components/schemas/ListName'
-            notificationType:
-              $ref: '#/components/schemas/NotificationTypeCode'
-            channel:
-              $ref: '#/components/schemas/Channel'
-            active:
-              type: boolean
-            version:
-              type: integer
-              format: int64
-              minimum: 0
-        - $ref: '#/components/schemas/AuditInfo'
+      type: object
+      required: [id, name, notificationType, channel, active, version, createdAt, createdBy, updatedAt, updatedBy]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          $ref: '#/components/schemas/ListName'
+        notificationType:
+          $ref: '#/components/schemas/NotificationTypeCode'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        active:
+          type: boolean
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        createdAt: { type: string, format: date-time }
+        createdBy: { type: string }
+        updatedAt: { type: string, format: date-time }
+        updatedBy: { type: string }
     DistributionListCollection:
       type: object
       required: [items]
@@ -796,17 +791,19 @@ components:
           minLength: 1
           maxLength: 320
     Member:
-      allOf:
-        - type: object
-          required: [id, address, active]
-          properties:
-            id:
-              $ref: '#/components/schemas/Id'
-            address:
-              type: string
-            active:
-              type: boolean
-        - $ref: '#/components/schemas/AuditInfo'
+      type: object
+      required: [id, address, active, createdAt, createdBy, updatedAt, updatedBy]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        address:
+          type: string
+        active:
+          type: boolean
+        createdAt: { type: string, format: date-time }
+        createdBy: { type: string }
+        updatedAt: { type: string, format: date-time }
+        updatedBy: { type: string }
     MemberCollection:
       type: object
       required: [items]
