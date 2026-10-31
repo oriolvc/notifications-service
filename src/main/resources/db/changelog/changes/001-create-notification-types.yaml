@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-notification-types
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: notification_types
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_notification_types } }
+              - column: { name: code, type: text, constraints: { nullable: false, unique: true, uniqueConstraintName: uq_notification_types_code } }
+              - column: { name: name, type: text, constraints: { nullable: false } }
+              - column: { name: parameters_schema, type: jsonb, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: created_by, type: text, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_by, type: text, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 001-create-notification-templates
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: notification_templates
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_notification_templates } }
+              - column:
+                  name: notification_type_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notification_templates_type, references: notification_types(id) }
+              - column: { name: channel, type: text, constraints: { nullable: false } }
+              - column: { name: subject, type: text }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: created_by, type: text, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_by, type: text, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: notification_templates
+            columnNames: notification_type_id, channel
+            constraintName: uq_notification_templates_type_channel
+        - sql:
+            sql: >-
+              ALTER TABLE notification_templates
+                ADD CONSTRAINT ck_notification_templates_channel CHECK (channel IN ('EMAIL')),
+                ADD CONSTRAINT ck_notification_templates_email_subject CHECK (channel <> 'EMAIL' OR subject IS NOT NULL)

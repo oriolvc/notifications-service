@@ -1,0 +1,40 @@
+databaseChangeLog:
+  # The parameters schema is the same file the OpenAPI spec references (RFC 6.3). Never edit it: add a v2.
+  # The JDBC driver binds a CLOB as varchar, which Postgres won't assign to jsonb, so the file goes
+  # through a staging table and is cast in SQL. All changes run in the changeset's transaction.
+  - changeSet:
+      id: 002-seed-regulatory-document-matched-type
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: seed_parameters_schemas
+            columns:
+              - column: { name: content, type: text, constraints: { nullable: false } }
+        - insert:
+            tableName: seed_parameters_schemas
+            columns:
+              - column: { name: content, valueClobFile: ../../../schemas/regulatory-document-matched.v1.json }
+        - sql:
+            sql: >-
+              INSERT INTO notification_types (code, name, parameters_schema, created_at, created_by, updated_at, updated_by)
+              SELECT 'REGULATORY_DOCUMENT_MATCHED', 'Regulatory document matched to a site', content::jsonb,
+                     now(), 'system', now(), 'system'
+              FROM seed_parameters_schemas
+        - dropTable:
+            tableName: seed_parameters_schemas
+
+  - changeSet:
+      id: 002-seed-regulatory-document-matched-email-template
+      author: oriolvc
+      changes:
+        - insert:
+            tableName: notification_templates
+            columns:
+              - column: { name: notification_type_id, valueComputed: "(SELECT id FROM notification_types WHERE code = 'REGULATORY_DOCUMENT_MATCHED')" }
+              - column: { name: channel, value: EMAIL }
+              - column: { name: subject, value: "{{authorityName}} {{documentType}} – {{siteName}}" }
+              - column: { name: body, value: "{{siteName}}, located at {{siteAddress}}, received a {{authorityName}} {{documentType}} on {{issueDate}}. [{{confidence}}%]" }
+              - column: { name: created_at, valueComputed: now() }
+              - column: { name: created_by, value: system }
+              - column: { name: updated_at, valueComputed: now() }
+              - column: { name: updated_by, value: system }

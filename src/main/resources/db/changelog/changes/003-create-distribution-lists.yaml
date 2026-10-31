@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-distribution-lists
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: distribution_lists
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_distribution_lists } }
+              - column: { name: customer_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: name, type: text, constraints: { nullable: false } }
+              - column:
+                  name: notification_type_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_distribution_lists_type, references: notification_types(id) }
+              - column: { name: channel, type: text, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: created_by, type: text, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_by, type: text, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: distribution_lists
+            columnNames: customer_id, name
+            constraintName: uq_distribution_lists_customer_name
+        - sql:
+            sql: >-
+              ALTER TABLE distribution_lists
+                ADD CONSTRAINT ck_distribution_lists_channel CHECK (channel IN ('EMAIL'));
+              CREATE UNIQUE INDEX uq_distribution_lists_active_customer_type_channel
+                ON distribution_lists (customer_id, notification_type_id, channel) WHERE active
+
+  - changeSet:
+      id: 003-create-distribution-list-members
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: distribution_list_members
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_distribution_list_members } }
+              - column:
+                  name: distribution_list_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_distribution_list_members_list, references: distribution_lists(id) }
+              - column: { name: address, type: text, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: created_by, type: text, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_by, type: text, constraints: { nullable: false } }
+        - sql:
+            sql: >-
+              CREATE UNIQUE INDEX uq_distribution_list_members_list_address
+                ON distribution_list_members (distribution_list_id, lower(address))

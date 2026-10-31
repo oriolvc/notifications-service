@@ -1,1 +1,16 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - include:
+      file: changes/001-create-notification-types.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/002-seed-regulatory-document-matched.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/003-create-distribution-lists.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/004-create-notifications.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/005-create-envers-tables.yaml
+      relativeToChangelogFile: true

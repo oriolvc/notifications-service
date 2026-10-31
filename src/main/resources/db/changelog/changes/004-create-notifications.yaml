@@ -1,0 +1,119 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-notifications
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: notifications
+            remarks: One per (event, customer). Immutable.
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_notifications } }
+              - column:
+                  name: notification_type_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notifications_type, references: notification_types(id) }
+              - column: { name: event_key, type: char(64), constraints: { nullable: false } }
+              - column: { name: customer_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: parameters, type: jsonb, constraints: { nullable: false } }
+              - column: { name: outcome, type: text, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: created_by, type: text, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: notifications
+            columnNames: notification_type_id, event_key, customer_id
+            constraintName: uq_notifications_type_event_customer
+        - createIndex:
+            tableName: notifications
+            indexName: ix_notifications_customer_created_at
+            columns:
+              - column: { name: customer_id }
+              - column: { name: created_at }
+        - createIndex:
+            tableName: notifications
+            indexName: ix_notifications_event_key
+            columns:
+              - column: { name: event_key }
+        - sql:
+            sql: >-
+              ALTER TABLE notifications
+                ADD CONSTRAINT ck_notifications_outcome CHECK (outcome IN ('ACCEPTED', 'NO_RECIPIENTS')),
+                ADD CONSTRAINT ck_notifications_event_key CHECK (event_key ~ '^[0-9a-f]{64}$')
+
+  - changeSet:
+      id: 004-create-notification-deliveries
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: notification_deliveries
+            remarks: One per (notification, member). PENDING rows are the dispatch work queue.
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_notification_deliveries } }
+              - column:
+                  name: notification_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notification_deliveries_notification, references: notifications(id) }
+              - column:
+                  name: distribution_list_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notification_deliveries_list, references: distribution_lists(id) }
+              - column:
+                  name: distribution_list_member_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notification_deliveries_member, references: distribution_list_members(id) }
+              - column: { name: channel, type: text, constraints: { nullable: false } }
+              - column: { name: address, type: text, constraints: { nullable: false } }
+              - column:
+                  name: template_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_notification_deliveries_template, references: notification_templates(id) }
+              - column: { name: subject, type: text }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column: { name: status, type: text, constraints: { nullable: false } }
+              - column: { name: attempt_count, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: next_attempt_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: sent_at, type: timestamptz }
+              - column: { name: provider_message_id, type: text }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: notification_deliveries
+            columnNames: notification_id, distribution_list_member_id
+            constraintName: uq_notification_deliveries_notification_member
+        - sql:
+            sql: >-
+              ALTER TABLE notification_deliveries
+                ADD CONSTRAINT ck_notification_deliveries_channel CHECK (channel IN ('EMAIL')),
+                ADD CONSTRAINT ck_notification_deliveries_status CHECK (status IN ('PENDING', 'SENT', 'FAILED')),
+                ADD CONSTRAINT ck_notification_deliveries_attempt_count CHECK (attempt_count >= 0);
+              CREATE INDEX ix_notification_deliveries_pending_next_attempt
+                ON notification_deliveries (next_attempt_at) WHERE status = 'PENDING'
+
+  - changeSet:
+      id: 004-create-delivery-attempts
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: delivery_attempts
+            remarks: Append-only history of every send attempt.
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_delivery_attempts } }
+              - column:
+                  name: delivery_id
+                  type: bigint
+                  constraints: { nullable: false, foreignKeyName: fk_delivery_attempts_delivery, references: notification_deliveries(id) }
+              - column: { name: attempt_number, type: int, constraints: { nullable: false } }
+              - column: { name: attempted_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: outcome, type: text, constraints: { nullable: false } }
+              - column: { name: provider_message_id, type: text }
+              - column: { name: error_code, type: text }
+              - column: { name: error_message, type: text }
+        - addUniqueConstraint:
+            tableName: delivery_attempts
+            columnNames: delivery_id, attempt_number
+            constraintName: uq_delivery_attempts_delivery_attempt_number
+        - sql:
+            sql: >-
+              ALTER TABLE delivery_attempts
+                ADD CONSTRAINT ck_delivery_attempts_outcome CHECK (outcome IN ('SUCCESS', 'RETRYABLE_ERROR', 'PERMANENT_ERROR')),
+                ADD CONSTRAINT ck_delivery_attempts_attempt_number CHECK (attempt_number >= 1)

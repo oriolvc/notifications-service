@@ -227,6 +227,8 @@ src/main/resources/
       - column: { name: parameters_schema, valueClobFile: regulatory-document-matched.v1.json }
 ```
 
+The PostgreSQL driver binds a `valueClobFile` as `varchar`, which cannot be assigned to `jsonb`. The seed changeset therefore loads the file into a temporary `seed_parameters_schemas(content text)` table, inserts the type with `content::jsonb`, and drops the table, all in the changeset's transaction. The file is still the single source and still part of the checksum.
+
 - **Versioned files.** Liquibase checksums include the file content, so an applied file is never edited. A change means a new `…v2.json`, a new changeset updating the row, and the spec pointing to v2. Stored notifications keep their original parameters.
 - **One validation path.** Generated DTOs map the per-type `parameters` schemas to a generic JSON type (openapi-generator `schemaMappings` → `JsonNode`). The web adapter builds the generic command (`type`, `customerIds`, `parameters`). The JSON Schema validator remains the only parameter validator, so every violation returns the same 422 response, not a mix of Jackson 400s and Bean Validation errors.
 - **Generated `oneOf` (openapi-generator 7.26, `spring`).** With a single variant the generator flattens the `oneOf` into one concrete `CreateNotificationRequest` class (`type` enum, `customerIds`, `parameters: JsonNode`). From two variants on it generates an interface with `@JsonTypeInfo`/`@JsonSubTypes` and one class per variant. The web adapter only reads `type`, `customerIds` and `parameters`, so adding the second type changes that mapping only. An unknown `type` fails Jackson deserialization in both shapes; the error handler maps it to the same 422 as an unknown type in the catalog (AC-11).
@@ -383,7 +385,7 @@ Table distribution_list_members {        // audited (Envers)
 Table notifications {                    // one per (event, customer); immutable
   id bigint [pk, increment]
   notification_type_id bigint [not null, ref: > notification_types.id]
-  event_key char(64) [not null]          // SHA-256 hex, §7.3
+  event_key char(64) [not null]          // SHA-256 hex, §7.3; CHECK (event_key ~ '^[0-9a-f]{64}$')
   customer_id bigint [not null]
   parameters jsonb [not null]            // normalized
   outcome text [not null]                // ACCEPTED | NO_RECIPIENTS
@@ -391,6 +393,7 @@ Table notifications {                    // one per (event, customer); immutable
   indexes {
     (notification_type_id, event_key, customer_id) [unique]  // deduplication
     (customer_id, created_at)
+    (event_key)                          // search by event reference (§6.1)
   }
 }
 
@@ -430,12 +433,12 @@ Table delivery_attempts {                // append-only
 }
 
 // Envers
-Table revinfo { rev bigint [pk], rev_timestamp timestamptz, user_id text }
+Table revinfo { rev bigint [pk, increment], rev_timestamp timestamptz [not null], user_id text [not null] }
 Table distribution_lists_aud { ... + rev, revtype }
 Table distribution_list_members_aud { ... + rev, revtype }
 ```
 
-All tables, including the Envers ones, are created by Liquibase (no `ddl-auto`). Lists and members are never hard-deleted, so FKs from deliveries remain valid.
+All tables, including the Envers ones, are created by Liquibase (no `ddl-auto`). Every enum-like column (`channel`, `status`, `outcome`) has a `CHECK` listing its values; counters have `CHECK (… >= 0)` / `attempt_number >= 1`. `_aud` tables carry the audited columns (all nullable, `@Version` excluded) plus `rev` (FK to `revinfo`) and `revtype smallint`, with PK `(id, rev)`. Lists and members are never hard-deleted, so FKs from deliveries remain valid.
 
 ## 11. Auditing and tracking (FR.1.6)
 

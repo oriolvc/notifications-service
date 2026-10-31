@@ -1,0 +1,59 @@
+databaseChangeLog:
+  # Envers audit tables for distribution lists and members. Columns are nullable because Envers
+  # stores only the id for DEL revisions. @Version is not audited.
+  - changeSet:
+      id: 005-create-revinfo
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: revinfo
+            columns:
+              - column: { name: rev, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_revinfo } }
+              - column: { name: rev_timestamp, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: user_id, type: text, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 005-create-distribution-lists-aud
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: distribution_lists_aud
+            columns:
+              - column: { name: id, type: bigint, constraints: { nullable: false } }
+              - column: { name: rev, type: bigint, constraints: { nullable: false, foreignKeyName: fk_distribution_lists_aud_rev, references: revinfo(rev) } }
+              - column: { name: revtype, type: smallint }
+              - column: { name: customer_id, type: bigint }
+              - column: { name: name, type: text }
+              - column: { name: notification_type_id, type: bigint }
+              - column: { name: channel, type: text }
+              - column: { name: active, type: boolean }
+              - column: { name: created_at, type: timestamptz }
+              - column: { name: created_by, type: text }
+              - column: { name: updated_at, type: timestamptz }
+              - column: { name: updated_by, type: text }
+        - addPrimaryKey:
+            tableName: distribution_lists_aud
+            columnNames: id, rev
+            constraintName: pk_distribution_lists_aud
+
+  - changeSet:
+      id: 005-create-distribution-list-members-aud
+      author: oriolvc
+      changes:
+        - createTable:
+            tableName: distribution_list_members_aud
+            columns:
+              - column: { name: id, type: bigint, constraints: { nullable: false } }
+              - column: { name: rev, type: bigint, constraints: { nullable: false, foreignKeyName: fk_distribution_list_members_aud_rev, references: revinfo(rev) } }
+              - column: { name: revtype, type: smallint }
+              - column: { name: distribution_list_id, type: bigint }
+              - column: { name: address, type: text }
+              - column: { name: active, type: boolean }
+              - column: { name: created_at, type: timestamptz }
+              - column: { name: created_by, type: text }
+              - column: { name: updated_at, type: timestamptz }
+              - column: { name: updated_by, type: text }
+        - addPrimaryKey:
+            tableName: distribution_list_members_aud
+            columnNames: id, rev
+            constraintName: pk_distribution_list_members_aud

@@ -55,7 +55,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** the build generates the interfaces, and Swagger UI shows the complete API. No controllers yet.
 
-## [ ] T2 — Database schema and seed
+## [x] T2 — Database schema and seed
 
 **Goal:** the complete schema from RFC §10, created by Liquibase.
 
