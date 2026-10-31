@@ -6,7 +6,7 @@ final class NotificationTypeDboMapper {
 
     private NotificationTypeDboMapper() {}
 
-    static NotificationType toDomain(NotificationTypeDbo dbo) {
+    static NotificationType toDomain(final NotificationTypeDbo dbo) {
         return new NotificationType(dbo.getId(), dbo.getCode(), dbo.getName(), dbo.isActive());
     }
 }

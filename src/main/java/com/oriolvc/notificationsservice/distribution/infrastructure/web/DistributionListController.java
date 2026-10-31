@@ -36,12 +36,12 @@ class DistributionListController implements DistributionListsApi {
     private final DeleteDistributionList deleteDistributionList;
 
     DistributionListController(
-            CurrentPrincipalProvider principals,
-            CreateDistributionList createDistributionList,
-            GetDistributionList getDistributionList,
-            ListDistributionLists listDistributionLists,
-            UpdateDistributionList updateDistributionList,
-            DeleteDistributionList deleteDistributionList) {
+            final CurrentPrincipalProvider principals,
+            final CreateDistributionList createDistributionList,
+            final GetDistributionList getDistributionList,
+            final ListDistributionLists listDistributionLists,
+            final UpdateDistributionList updateDistributionList,
+            final DeleteDistributionList deleteDistributionList) {
         this.principals = principals;
         this.createDistributionList = createDistributionList;
         this.getDistributionList = getDistributionList;
@@ -51,13 +51,13 @@ class DistributionListController implements DistributionListsApi {
     }
 
     @Override
-    public ResponseEntity<DistributionList> createDistributionList(CreateDistributionListRequest request) {
-        DistributionListView created = createDistributionList.execute(new CreateDistributionListCommand(
+    public ResponseEntity<DistributionList> createDistributionList(final CreateDistributionListRequest request) {
+        final DistributionListView created = createDistributionList.execute(new CreateDistributionListCommand(
                 tenantId(),
                 request.getName(),
                 request.getNotificationType(),
                 DistributionListWebMapper.toDomain(request.getChannel())));
-        var location = ServletUriComponentsBuilder.fromCurrentRequestUri()
+        final var location = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(created.id())
                 .toUri();
@@ -66,28 +66,29 @@ class DistributionListController implements DistributionListsApi {
 
     @Override
     public ResponseEntity<DistributionListCollection> listDistributionLists() {
-        var items = listDistributionLists.execute(new ListDistributionListsCommand(tenantId())).stream()
+        final var items = listDistributionLists.execute(new ListDistributionListsCommand(tenantId())).stream()
                 .map(DistributionListWebMapper::toDto)
                 .toList();
         return ResponseEntity.ok(new DistributionListCollection(items));
     }
 
     @Override
-    public ResponseEntity<DistributionList> getDistributionList(Long listId) {
-        DistributionListView distributionList =
+    public ResponseEntity<DistributionList> getDistributionList(final Long listId) {
+        final DistributionListView distributionList =
                 getDistributionList.execute(new GetDistributionListCommand(tenantId(), listId));
         return ResponseEntity.ok(DistributionListWebMapper.toDto(distributionList));
     }
 
     @Override
-    public ResponseEntity<DistributionList> updateDistributionList(Long listId, UpdateDistributionListRequest request) {
-        DistributionListView updated = updateDistributionList.execute(new UpdateDistributionListCommand(
+    public ResponseEntity<DistributionList> updateDistributionList(
+            final Long listId, final UpdateDistributionListRequest request) {
+        final DistributionListView updated = updateDistributionList.execute(new UpdateDistributionListCommand(
                 tenantId(), listId, request.getName(), request.getActive(), request.getVersion()));
         return ResponseEntity.ok(DistributionListWebMapper.toDto(updated));
     }
 
     @Override
-    public ResponseEntity<Void> deleteDistributionList(Long listId) {
+    public ResponseEntity<Void> deleteDistributionList(final Long listId) {
         deleteDistributionList.execute(new DeleteDistributionListCommand(tenantId(), listId));
         return ResponseEntity.noContent().build();
     }

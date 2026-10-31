@@ -12,12 +12,12 @@ class DistributionListViews {
 
     private final NotificationTypeQuery notificationTypes;
 
-    DistributionListViews(NotificationTypeQuery notificationTypes) {
+    DistributionListViews(final NotificationTypeQuery notificationTypes) {
         this.notificationTypes = notificationTypes;
     }
 
-    DistributionListView of(DistributionList distributionList) {
-        String code = notificationTypes
+    DistributionListView of(final DistributionList distributionList) {
+        final String code = notificationTypes
                 .findById(distributionList.notificationTypeId())
                 .map(NotificationTypeRef::code)
                 .orElseThrow(() -> new IllegalStateException(

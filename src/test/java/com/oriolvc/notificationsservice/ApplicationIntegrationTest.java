@@ -14,7 +14,7 @@ class ApplicationIntegrationTest extends IntegrationTest {
 
     @Test
     void contextLoadsAgainstPostgres18WithLiquibaseApplied() {
-        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        final JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 
         assertThat(jdbc.queryForObject("SHOW server_version_num", Integer.class))
                 .isGreaterThanOrEqualTo(180000);

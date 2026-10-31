@@ -15,7 +15,7 @@ public record CurrentPrincipal(String userId, Long tenantId, Set<Role> roles) {
         roles = Set.copyOf(roles);
     }
 
-    public boolean hasRole(Role role) {
+    public boolean hasRole(final Role role) {
         return roles.contains(role);
     }
 

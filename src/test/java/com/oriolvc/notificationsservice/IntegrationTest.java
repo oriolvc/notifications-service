@@ -34,7 +34,7 @@ public abstract class IntegrationTest {
     @Autowired
     protected JdbcTemplate jdbc;
 
-    protected static String bearer(String token) {
+    protected static String bearer(final String token) {
         return JwtTokens.bearer(token);
     }
 }

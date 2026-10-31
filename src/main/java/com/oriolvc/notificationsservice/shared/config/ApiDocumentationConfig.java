@@ -14,7 +14,7 @@ class ApiDocumentationConfig implements WebMvcConfigurer {
     static final String SPEC_PATH = "/openapi/notifications-service.yaml";
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/openapi/**").addResourceLocations("classpath:/openapi/");
         registry.addResourceHandler("/schemas/**").addResourceLocations("classpath:/schemas/");
     }

@@ -16,7 +16,7 @@ public final class LocalTokens {
 
     private LocalTokens() {}
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         print(
                 "NOTIFICATION_PUBLISHER (detection process)",
                 JwtTokens.token(
@@ -24,9 +24,9 @@ public final class LocalTokens {
                                 .claim("client_id", JwtTokens.PUBLISHER_CLIENT_ID)
                                 .claim("roles", List.of(Role.NOTIFICATION_PUBLISHER.name())),
                         VALIDITY));
-        for (long tenantId : new long[] {101, 102}) {
-            for (Role role : List.of(Role.DISTRIBUTION_LIST_ADMIN, Role.NOTIFICATION_VIEWER)) {
-                String userId = "user-" + tenantId + "-" + role.name().toLowerCase();
+        for (final long tenantId : new long[] {101, 102}) {
+            for (final Role role : List.of(Role.DISTRIBUTION_LIST_ADMIN, Role.NOTIFICATION_VIEWER)) {
+                final String userId = "user-" + tenantId + "-" + role.name().toLowerCase();
                 print(
                         role + " of tenant " + tenantId,
                         JwtTokens.token(
@@ -39,7 +39,7 @@ public final class LocalTokens {
         }
     }
 
-    private static void print(String label, String token) {
+    private static void print(final String label, final String token) {
         System.out.println("# " + label);
         System.out.println(token);
         System.out.println();

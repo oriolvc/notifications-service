@@ -12,12 +12,13 @@ public class GetDistributionList {
     private final DistributionListRepository distributionListRepository;
     private final DistributionListViews views;
 
-    GetDistributionList(DistributionListRepository distributionListRepository, DistributionListViews views) {
+    GetDistributionList(
+            final DistributionListRepository distributionListRepository, final DistributionListViews views) {
         this.distributionListRepository = distributionListRepository;
         this.views = views;
     }
 
-    public DistributionListView execute(GetDistributionListCommand command) {
+    public DistributionListView execute(final GetDistributionListCommand command) {
         return distributionListRepository
                 .findByIdAndCustomerId(command.listId(), command.tenantId())
                 .map(views::of)

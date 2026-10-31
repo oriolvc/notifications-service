@@ -11,7 +11,7 @@ class DistributionListTest {
 
     @Test
     void createsAnActiveListWithATrimmedName() {
-        DistributionList distributionList = DistributionList.create(101, "  Compliance  ", 1, Channel.EMAIL);
+        final DistributionList distributionList = DistributionList.create(101, "  Compliance  ", 1, Channel.EMAIL);
 
         assertThat(distributionList.isActive()).isTrue();
         assertThat(distributionList.name()).isEqualTo("Compliance");
@@ -33,7 +33,7 @@ class DistributionListTest {
 
     @Test
     void renamesDeactivatesAndReactivates() {
-        DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
+        final DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
 
         distributionList.rename(" QA ");
         distributionList.deactivate();
@@ -46,7 +46,7 @@ class DistributionListTest {
 
     @Test
     void staleVersionIsRejected() {
-        DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
+        final DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
 
         distributionList.checkVersion(0);
         assertThatThrownBy(() -> distributionList.checkVersion(3)).isInstanceOf(VersionConflictException.class);

@@ -24,14 +24,14 @@ public class DistributionList {
     private final AuditMetadata audit;
 
     private DistributionList(
-            Long id,
-            long customerId,
-            String name,
-            long notificationTypeId,
-            Channel channel,
-            boolean active,
-            long version,
-            AuditMetadata audit) {
+            final Long id,
+            final long customerId,
+            final String name,
+            final long notificationTypeId,
+            final Channel channel,
+            final boolean active,
+            final long version,
+            final AuditMetadata audit) {
         this.id = id;
         this.customerId = customerId;
         this.name = name;
@@ -42,33 +42,34 @@ public class DistributionList {
         this.audit = audit;
     }
 
-    public static DistributionList create(long customerId, String name, long notificationTypeId, Channel channel) {
+    public static DistributionList create(
+            final long customerId, final String name, final long notificationTypeId, final Channel channel) {
         return new DistributionList(null, customerId, validName(name), notificationTypeId, channel, true, 0, null);
     }
 
     /** Rebuilds a stored list as it was saved; used by the persistence adapter. */
     public static DistributionList restore(
-            long id,
-            long customerId,
-            String name,
-            long notificationTypeId,
-            Channel channel,
-            boolean active,
-            long version,
-            AuditMetadata audit) {
+            final long id,
+            final long customerId,
+            final String name,
+            final long notificationTypeId,
+            final Channel channel,
+            final boolean active,
+            final long version,
+            final AuditMetadata audit) {
         return new DistributionList(
                 id, customerId, name, notificationTypeId, channel, active, version, Objects.requireNonNull(audit));
     }
 
     /** Optimistic locking for client edits: the client must have read the current version. */
-    public void checkVersion(long expectedVersion) {
+    public void checkVersion(final long expectedVersion) {
         if (version != expectedVersion) {
             throw new VersionConflictException("Distribution list " + id + " is at version " + version + ", not "
                     + expectedVersion + "; read it again and retry");
         }
     }
 
-    public void rename(String newName) {
+    public void rename(final String newName) {
         this.name = validName(newName);
     }
 
@@ -81,12 +82,12 @@ public class DistributionList {
     }
 
     /** Leading and trailing spaces are not part of the name. */
-    public static String normalizeName(String name) {
+    public static String normalizeName(final String name) {
         return name == null ? null : name.strip();
     }
 
-    private static String validName(String name) {
-        String normalized = normalizeName(name);
+    private static String validName(final String name) {
+        final String normalized = normalizeName(name);
         if (normalized == null || normalized.isEmpty() || normalized.length() > MAX_NAME_LENGTH) {
             throw new IllegalArgumentException("A list name must have 1 to " + MAX_NAME_LENGTH + " characters");
         }

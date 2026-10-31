@@ -12,12 +12,12 @@ public class DeleteDistributionList {
 
     private final DistributionListRepository distributionListRepository;
 
-    DeleteDistributionList(DistributionListRepository distributionListRepository) {
+    DeleteDistributionList(final DistributionListRepository distributionListRepository) {
         this.distributionListRepository = distributionListRepository;
     }
 
-    public void execute(DeleteDistributionListCommand command) {
-        DistributionList distributionList = distributionListRepository
+    public void execute(final DeleteDistributionListCommand command) {
+        final DistributionList distributionList = distributionListRepository
                 .findByIdAndCustomerId(command.listId(), command.tenantId())
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));
         if (distributionList.isActive()) {

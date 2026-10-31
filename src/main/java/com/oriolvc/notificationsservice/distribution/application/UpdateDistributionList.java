@@ -13,19 +13,20 @@ public class UpdateDistributionList {
     private final DistributionListRepository distributionListRepository;
     private final DistributionListViews views;
 
-    UpdateDistributionList(DistributionListRepository distributionListRepository, DistributionListViews views) {
+    UpdateDistributionList(
+            final DistributionListRepository distributionListRepository, final DistributionListViews views) {
         this.distributionListRepository = distributionListRepository;
         this.views = views;
     }
 
-    public DistributionListView execute(UpdateDistributionListCommand command) {
-        DistributionList distributionList = distributionListRepository
+    public DistributionListView execute(final UpdateDistributionListCommand command) {
+        final DistributionList distributionList = distributionListRepository
                 .findByIdAndCustomerId(command.listId(), command.tenantId())
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));
         distributionList.checkVersion(command.version());
 
         // A taken name or reactivating next to another active list is rejected by the unique constraints (409)
-        String name = DistributionList.normalizeName(command.name());
+        final String name = DistributionList.normalizeName(command.name());
         if (name != null) {
             distributionList.rename(name);
         }

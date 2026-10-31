@@ -21,7 +21,7 @@ class AuditingConfig {
 
     /** Truncated to what Postgres stores, so the saved copy and a later read carry the same timestamps. */
     @Bean
-    DateTimeProvider auditingDateTimeProvider(Clock clock) {
+    DateTimeProvider auditingDateTimeProvider(final Clock clock) {
         return () -> Optional.of(clock.instant().truncatedTo(ChronoUnit.MICROS));
     }
 }

@@ -18,12 +18,12 @@ final class JwtClaims {
 
     private JwtClaims() {}
 
-    static CurrentPrincipal toPrincipal(Jwt jwt) {
+    static CurrentPrincipal toPrincipal(final Jwt jwt) {
         return new CurrentPrincipal(identity(jwt), tenantId(jwt), roles(jwt));
     }
 
     /** {@code userId}, falling back to the client id and then {@code sub} for service tokens. */
-    static String identity(Jwt jwt) {
+    static String identity(final Jwt jwt) {
         return Stream.of(jwt.getClaimAsString(USER_ID), jwt.getClaimAsString(CLIENT_ID), jwt.getSubject())
                 .filter(StringUtils::hasText)
                 .findFirst()
@@ -31,8 +31,8 @@ final class JwtClaims {
     }
 
     /** The {@code tenantId} claim as a number; {@code null} if absent. */
-    static Long tenantId(Jwt jwt) {
-        Object value = jwt.getClaim(TENANT_ID);
+    static Long tenantId(final Jwt jwt) {
+        final Object value = jwt.getClaim(TENANT_ID);
         return switch (value) {
             case null -> null;
             case Number number -> number.longValue();
@@ -41,10 +41,10 @@ final class JwtClaims {
         };
     }
 
-    static Set<Role> roles(Jwt jwt) {
-        Object value = jwt.getClaim(ROLES);
-        Collection<?> claimed = value instanceof Collection<?> values ? values : List.of();
-        Set<Role> roles = EnumSet.noneOf(Role.class);
+    static Set<Role> roles(final Jwt jwt) {
+        final Object value = jwt.getClaim(ROLES);
+        final Collection<?> claimed = value instanceof Collection<?> values ? values : List.of();
+        final Set<Role> roles = EnumSet.noneOf(Role.class);
         claimed.forEach(role -> Role.fromClaim(String.valueOf(role)).ifPresent(roles::add));
         return roles;
     }

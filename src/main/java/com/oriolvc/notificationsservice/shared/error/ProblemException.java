@@ -11,7 +11,7 @@ public abstract class ProblemException extends RuntimeException {
     private final ProblemType type;
     private final List<Violation> violations;
 
-    protected ProblemException(ProblemType type, String detail, List<Violation> violations) {
+    protected ProblemException(final ProblemType type, final String detail, final List<Violation> violations) {
         super(detail);
         this.type = type;
         this.violations = List.copyOf(violations);

@@ -11,8 +11,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 class PrincipalJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
     @Override
-    public AbstractAuthenticationToken convert(Jwt jwt) {
-        List<SimpleGrantedAuthority> authorities = JwtClaims.roles(jwt).stream()
+    public AbstractAuthenticationToken convert(final Jwt jwt) {
+        final List<SimpleGrantedAuthority> authorities = JwtClaims.roles(jwt).stream()
                 .map(role -> new SimpleGrantedAuthority(role.authority()))
                 .toList();
         return new JwtAuthenticationToken(jwt, authorities, JwtClaims.identity(jwt));

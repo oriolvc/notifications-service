@@ -33,7 +33,8 @@ class ProblemDetailsExceptionHandlerTest {
 
     @Test
     void notFound() {
-        ProblemDetail problem = body(handler.handleProblem(new NotFoundException("Distribution list 7"), request));
+        final ProblemDetail problem =
+                body(handler.handleProblem(new NotFoundException("Distribution list 7"), request));
 
         assertThat(problem.getStatus()).isEqualTo(404);
         assertThat(problem.getType()).isEqualTo(URI.create("urn:notifications-service:problem:not-found"));
@@ -70,9 +71,9 @@ class ProblemDetailsExceptionHandlerTest {
     @Test
     void unprocessableCarriesViolationsAndRequestId() {
         MDC.put(RequestIdFilter.MDC_KEY, "req-1");
-        var violations = List.of(new Violation("/parameters/confidence", "must be at most 100"));
+        final var violations = List.of(new Violation("/parameters/confidence", "must be at most 100"));
 
-        ProblemDetail problem =
+        final ProblemDetail problem =
                 body(handler.handleProblem(new UnprocessableException("Invalid parameters", violations), request));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT.value());
@@ -84,7 +85,8 @@ class ProblemDetailsExceptionHandlerTest {
 
     @Test
     void unexpectedErrorsDoNotLeakDetails() {
-        ProblemDetail problem = body(handler.handleUnexpected(new IllegalStateException("db password is x"), request));
+        final ProblemDetail problem =
+                body(handler.handleUnexpected(new IllegalStateException("db password is x"), request));
 
         assertThat(problem.getStatus()).isEqualTo(500);
         assertThat(problem.getType()).isEqualTo(ProblemType.INTERNAL_ERROR.uri());
@@ -106,11 +108,11 @@ class ProblemDetailsExceptionHandlerTest {
         assertThat(ProblemType.forStatus(503)).isEqualTo(ProblemType.INTERNAL_ERROR);
     }
 
-    private static ProblemDetail body(ResponseEntity<Object> response) {
+    private static ProblemDetail body(final ResponseEntity<Object> response) {
         return (ProblemDetail) response.getBody();
     }
 
-    private static DataIntegrityViolationException integrityViolation(ConstraintKind kind) {
+    private static DataIntegrityViolationException integrityViolation(final ConstraintKind kind) {
         return new DataIntegrityViolationException(
                 "could not execute statement",
                 new ConstraintViolationException(

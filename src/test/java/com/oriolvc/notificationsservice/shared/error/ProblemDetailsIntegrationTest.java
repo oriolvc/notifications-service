@@ -17,7 +17,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
 
     @Test
     void unreadableBodyIsMalformed() {
-        MvcTestResult result = postNotification("{\"type\": ");
+        final MvcTestResult result = postNotification("{\"type\": ");
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST).hasContentType("application/problem+json");
         assertThat(result).bodyJson().extractingPath("$.type").isEqualTo(MALFORMED_REQUEST);
@@ -26,7 +26,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
 
     @Test
     void beanValidationErrorsListViolationsAsJsonPointers() {
-        MvcTestResult result = postNotification("""
+        final MvcTestResult result = postNotification("""
                 {"type": "REGULATORY_DOCUMENT_MATCHED", "customerIds": [], "parameters": {}}
                 """);
 
@@ -37,7 +37,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
 
     @Test
     void invalidPathParameterIsMalformed() {
-        MvcTestResult result = mvc.get()
+        final MvcTestResult result = mvc.get()
                 .uri("/distribution-lists/0")
                 .header(HttpHeaders.AUTHORIZATION, bearer(JwtTokens.viewer(101)))
                 .exchange();
@@ -48,7 +48,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
 
     @Test
     void nonNumericPathParameterIsMalformed() {
-        MvcTestResult result = mvc.get()
+        final MvcTestResult result = mvc.get()
                 .uri("/distribution-lists/abc")
                 .header(HttpHeaders.AUTHORIZATION, bearer(JwtTokens.viewer(101)))
                 .exchange();
@@ -59,7 +59,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
 
     @Test
     void unsupportedContentTypeIsReported() {
-        MvcTestResult result = mvc.post()
+        final MvcTestResult result = mvc.post()
                 .uri("/notifications")
                 .header(HttpHeaders.AUTHORIZATION, bearer(JwtTokens.publisher()))
                 .contentType(MediaType.TEXT_PLAIN)
@@ -73,7 +73,7 @@ class ProblemDetailsIntegrationTest extends IntegrationTest {
                 .isEqualTo("urn:notifications-service:problem:unsupported-media-type");
     }
 
-    private MvcTestResult postNotification(String body) {
+    private MvcTestResult postNotification(final String body) {
         return mvc.post()
                 .uri("/notifications")
                 .header(HttpHeaders.AUTHORIZATION, bearer(JwtTokens.publisher()))

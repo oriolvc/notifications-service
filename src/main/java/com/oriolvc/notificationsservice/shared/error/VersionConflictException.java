@@ -5,7 +5,7 @@ import java.util.List;
 /** The client sent a stale {@code version}. */
 public class VersionConflictException extends ProblemException {
 
-    public VersionConflictException(String detail) {
+    public VersionConflictException(final String detail) {
         super(ProblemType.VERSION_CONFLICT, detail, List.of());
     }
 }

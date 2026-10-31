@@ -18,12 +18,13 @@ class ProblemDetailsAccessDeniedHandler implements AccessDeniedHandler {
     private final AccessDeniedHandler bearer = new BearerTokenAccessDeniedHandler();
     private final HandlerExceptionResolver resolver;
 
-    ProblemDetailsAccessDeniedHandler(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+    ProblemDetailsAccessDeniedHandler(@Qualifier("handlerExceptionResolver") final HandlerExceptionResolver resolver) {
         this.resolver = resolver;
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception)
+    public void handle(
+            final HttpServletRequest request, final HttpServletResponse response, final AccessDeniedException exception)
             throws IOException, ServletException {
         bearer.handle(request, response, exception);
         resolver.resolveException(request, response, null, exception);

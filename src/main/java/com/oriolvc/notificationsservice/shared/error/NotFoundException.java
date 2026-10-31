@@ -5,7 +5,7 @@ import java.util.List;
 /** Missing resource, or a resource of another tenant (never reported as 403). */
 public class NotFoundException extends ProblemException {
 
-    public NotFoundException(String detail) {
+    public NotFoundException(final String detail) {
         super(ProblemType.NOT_FOUND, detail, List.of());
     }
 }

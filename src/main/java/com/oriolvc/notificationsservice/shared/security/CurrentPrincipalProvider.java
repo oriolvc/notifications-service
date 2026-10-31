@@ -17,7 +17,7 @@ public class CurrentPrincipalProvider {
 
     /** The caller, if the current thread is serving an authenticated request. */
     public static Optional<CurrentPrincipal> find() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken token) {
             return Optional.of(JwtClaims.toPrincipal(token.getToken()));
         }

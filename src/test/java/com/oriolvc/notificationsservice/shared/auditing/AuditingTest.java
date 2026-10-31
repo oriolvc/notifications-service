@@ -34,7 +34,7 @@ class AuditingTest {
 
     @Test
     void auditTimestampsComeFromTheClock() {
-        Instant now = Instant.parse("2026-10-31T10:00:00Z");
+        final Instant now = Instant.parse("2026-10-31T10:00:00Z");
 
         assertThat(config.auditingDateTimeProvider(Clock.fixed(now, ZoneOffset.UTC))
                         .getNow())
@@ -43,7 +43,7 @@ class AuditingTest {
 
     @Test
     void auditTimestampsAreTruncatedToWhatPostgresStores() {
-        Instant now = Instant.parse("2026-10-31T10:00:00.123456789Z");
+        final Instant now = Instant.parse("2026-10-31T10:00:00.123456789Z");
 
         assertThat(config.auditingDateTimeProvider(Clock.fixed(now, ZoneOffset.UTC))
                         .getNow())
@@ -53,8 +53,8 @@ class AuditingTest {
     @Test
     void enversRevisionsStoreTheSameUserId() throws Exception {
         authenticateAs("alice");
-        var constructor = RevisionInfo.class.getDeclaredConstructor();
-        RevisionInfo revision = constructor.newInstance();
+        final var constructor = RevisionInfo.class.getDeclaredConstructor();
+        final RevisionInfo revision = constructor.newInstance();
 
         new UserRevisionListener().newRevision(revision);
 
@@ -63,8 +63,8 @@ class AuditingTest {
         assertThat(revision.timestamp()).isNull();
     }
 
-    private static void authenticateAs(String userId) {
-        Jwt jwt = new Jwt(
+    private static void authenticateAs(final String userId) {
+        final Jwt jwt = new Jwt(
                 "token",
                 Instant.now(),
                 Instant.now().plusSeconds(60),

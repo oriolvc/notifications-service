@@ -46,7 +46,7 @@ public class RevisionInfo {
         return userId;
     }
 
-    void recordUser(String userId) {
+    void recordUser(final String userId) {
         this.userId = userId;
     }
 }

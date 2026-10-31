@@ -12,7 +12,7 @@ final class DistributionListWebMapper {
 
     private DistributionListWebMapper() {}
 
-    static DistributionList toDto(DistributionListView view) {
+    static DistributionList toDto(final DistributionListView view) {
         return new DistributionList()
                 .id(view.id())
                 .name(view.name())
@@ -26,11 +26,11 @@ final class DistributionListWebMapper {
                 .updatedBy(view.updatedBy());
     }
 
-    static com.oriolvc.notificationsservice.shared.domain.Channel toDomain(Channel channel) {
+    static com.oriolvc.notificationsservice.shared.domain.Channel toDomain(final Channel channel) {
         return com.oriolvc.notificationsservice.shared.domain.Channel.valueOf(channel.getValue());
     }
 
-    private static OffsetDateTime toOffset(Instant instant) {
+    private static OffsetDateTime toOffset(final Instant instant) {
         return instant.atOffset(ZoneOffset.UTC);
     }
 }

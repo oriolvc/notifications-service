@@ -23,7 +23,7 @@ public enum ProblemType {
     private final HttpStatus status;
     private final String title;
 
-    ProblemType(String slug, HttpStatus status, String title) {
+    ProblemType(final String slug, final HttpStatus status, final String title) {
         this.uri = URI.create(URI_PREFIX + slug);
         this.status = status;
         this.title = title;
@@ -42,8 +42,8 @@ public enum ProblemType {
     }
 
     /** The type used for a status that has no more specific problem type. */
-    static ProblemType forStatus(int status) {
-        for (ProblemType type : values()) {
+    static ProblemType forStatus(final int status) {
+        for (final ProblemType type : values()) {
             if (type.status.value() == status && type != ALREADY_EXISTS) {
                 return type;
             }

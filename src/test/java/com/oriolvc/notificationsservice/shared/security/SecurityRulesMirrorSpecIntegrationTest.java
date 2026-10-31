@@ -38,8 +38,8 @@ class SecurityRulesMirrorSpecIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest(name = "{0} without a token → 401")
     @MethodSource("operations")
-    void anonymousCallerIsUnauthenticated(Operation operation) {
-        MvcTestResult result = mvc.perform(request(operation, null));
+    void anonymousCallerIsUnauthenticated(final Operation operation) {
+        final MvcTestResult result = mvc.perform(request(operation, null));
 
         assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
         assertThat(result).headers().containsHeader(HttpHeaders.WWW_AUTHENTICATE);
@@ -47,8 +47,8 @@ class SecurityRulesMirrorSpecIntegrationTest extends IntegrationTest {
 
     @ParameterizedTest(name = "{0} as {1} → {2}")
     @MethodSource("operationsByRole")
-    void onlyTheRolesInTheSpecAreAllowed(Operation operation, Role role, String expectation) {
-        MvcTestResult result = mvc.perform(request(operation, token(role)));
+    void onlyTheRolesInTheSpecAreAllowed(final Operation operation, final Role role, final String expectation) {
+        final MvcTestResult result = mvc.perform(request(operation, token(role)));
 
         if (operation.roles().contains(role)) {
             assertThat(result.getResponse().getStatus())
@@ -70,8 +70,8 @@ class SecurityRulesMirrorSpecIntegrationTest extends IntegrationTest {
                                 Arguments.of(operation, role, operation.roles().contains(role) ? "allowed" : "403")));
     }
 
-    private RequestBuilder request(Operation operation, String token) {
-        var builder = MockMvcRequestBuilders.request(
+    private RequestBuilder request(final Operation operation, final String token) {
+        final var builder = MockMvcRequestBuilders.request(
                 operation.method(), operation.path().replaceAll("\\{[^}]+}", "1"));
         if (token != null) {
             builder.header(HttpHeaders.AUTHORIZATION, bearer(token));
@@ -79,21 +79,21 @@ class SecurityRulesMirrorSpecIntegrationTest extends IntegrationTest {
         return builder;
     }
 
-    private static String token(Role role) {
+    private static String token(final Role role) {
         return role.isTenantScoped() ? JwtTokens.user(TENANT, role) : JwtTokens.publisher();
     }
 
     @SuppressWarnings("unchecked")
     private static List<Operation> readOperations() throws IOException {
-        Map<String, Object> spec;
+        final Map<String, Object> spec;
         try (InputStream in = new ClassPathResource("openapi/notifications-service.yaml").getInputStream()) {
             spec = new Yaml().load(in);
         }
-        List<Operation> operations = new ArrayList<>();
-        var paths = (Map<String, Map<String, Object>>) spec.get("paths");
+        final List<Operation> operations = new ArrayList<>();
+        final var paths = (Map<String, Map<String, Object>>) spec.get("paths");
         paths.forEach((path, item) -> item.forEach((method, value) -> {
             if (value instanceof Map<?, ?> operation && operation.containsKey("operationId")) {
-                Set<Role> roles = EnumSet.noneOf(Role.class);
+                final Set<Role> roles = EnumSet.noneOf(Role.class);
                 ((List<String>) operation.get("x-required-roles")).forEach(role -> roles.add(Role.valueOf(role)));
                 operations.add(new Operation(
                         (String) operation.get("operationId"), HttpMethod.valueOf(method.toUpperCase()), path, roles));

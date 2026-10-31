@@ -16,7 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 class JwtIssuerConfig {
 
     @Bean
-    OAuth2TokenValidator<Jwt> jwtIssuerValidator(@Value("${notifications.security.jwt.issuer}") String issuer) {
+    OAuth2TokenValidator<Jwt> jwtIssuerValidator(@Value("${notifications.security.jwt.issuer}") final String issuer) {
         return new JwtIssuerValidator(issuer);
     }
 }

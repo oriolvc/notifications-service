@@ -29,8 +29,8 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
     @DisplayName("AC-17 customer user calling POST /notifications gets 403")
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {"DISTRIBUTION_LIST_ADMIN", "NOTIFICATION_VIEWER"})
-    void customerUserCannotPublish(String role) {
-        MvcTestResult result = postNotification(JwtTokens.user(101, Role.valueOf(role)));
+    void customerUserCannotPublish(final String role) {
+        final MvcTestResult result = postNotification(JwtTokens.user(101, Role.valueOf(role)));
 
         assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
         assertThat(result).bodyJson().extractingPath("$.type").isEqualTo("urn:notifications-service:problem:forbidden");
@@ -44,7 +44,7 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
 
     @Test
     void missingTokenIsReportedAsProblemDetail() {
-        MvcTestResult result = mvc.get().uri("/distribution-lists").exchange();
+        final MvcTestResult result = mvc.get().uri("/distribution-lists").exchange();
 
         assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED).hasContentType("application/problem+json");
         assertThat(result.getResponse().getHeader(HttpHeaders.WWW_AUTHENTICATE)).startsWith("Bearer");
@@ -56,7 +56,7 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
 
     @Test
     void expiredTokenIsRejected() {
-        String expired = JwtTokens.token(claims -> withAdminClaims(claims)
+        final String expired = JwtTokens.token(claims -> withAdminClaims(claims)
                 .issuedAt(Instant.now().minus(Duration.ofHours(2)))
                 .expiresAt(Instant.now().minus(Duration.ofHours(1))));
 
@@ -87,15 +87,15 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
 
     @Test
     void tokenWithoutKnownRolesIsForbidden() {
-        String token = JwtTokens.token(
+        final String token = JwtTokens.token(
                 claims -> claims.subject("u").claim("userId", "u").claim("roles", List.of("SUPER_ADMIN")));
 
         assertThat(mvc.get().uri("/distribution-lists").header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    private void assertUnauthorized(String token) {
-        MvcTestResult result = mvc.get()
+    private void assertUnauthorized(final String token) {
+        final MvcTestResult result = mvc.get()
                 .uri("/distribution-lists")
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
                 .exchange();
@@ -104,7 +104,7 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
         assertThat(result.getResponse().getHeader(HttpHeaders.WWW_AUTHENTICATE)).contains("invalid_token");
     }
 
-    private MvcTestResult postNotification(String token) {
+    private MvcTestResult postNotification(final String token) {
         return mvc.post()
                 .uri("/notifications")
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
@@ -113,7 +113,7 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
                 .exchange();
     }
 
-    private static JwtClaimsSet.Builder withAdminClaims(JwtClaimsSet.Builder claims) {
+    private static JwtClaimsSet.Builder withAdminClaims(final JwtClaimsSet.Builder claims) {
         return claims.subject("u")
                 .claim("userId", "u")
                 .claim("tenantId", 101)

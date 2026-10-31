@@ -26,7 +26,7 @@ class CurrentPrincipalTest {
     void customerUserIsMappedFromTheJwtClaims() {
         authenticate(jwt(Map.of("userId", "alice", "tenantId", 101, "roles", List.of("DISTRIBUTION_LIST_ADMIN", "X"))));
 
-        CurrentPrincipal principal = provider.current();
+        final CurrentPrincipal principal = provider.current();
 
         assertThat(principal).isEqualTo(new CurrentPrincipal("alice", 101L, Set.of(Role.DISTRIBUTION_LIST_ADMIN)));
         assertThat(principal.requireTenantId()).isEqualTo(101);
@@ -38,7 +38,7 @@ class CurrentPrincipalTest {
     void serviceTokenUsesClientIdAndHasNoTenant() {
         authenticate(jwt(Map.of("client_id", "detection-process", "roles", List.of("NOTIFICATION_PUBLISHER"))));
 
-        CurrentPrincipal principal = provider.current();
+        final CurrentPrincipal principal = provider.current();
 
         assertThat(principal.userId()).isEqualTo("detection-process");
         assertThat(principal.tenantId()).isNull();
@@ -62,7 +62,7 @@ class CurrentPrincipalTest {
 
     @Test
     void validatorRejectsTokensThatCannotBeMapped() {
-        var validator = new ServiceClaimsValidator();
+        final var validator = new ServiceClaimsValidator();
 
         assertThat(validator.validate(jwt(Map.of("tenantId", List.of(1)))).getErrors())
                 .extracting(error -> error.getDescription())
@@ -79,11 +79,11 @@ class CurrentPrincipalTest {
                 .isFalse();
     }
 
-    private static Jwt jwt(Map<String, Object> claims) {
+    private static Jwt jwt(final Map<String, Object> claims) {
         return new Jwt("token", Instant.now(), Instant.now().plusSeconds(60), Map.of("alg", "RS256"), claims);
     }
 
-    private static void authenticate(Jwt jwt) {
+    private static void authenticate(final Jwt jwt) {
         SecurityContextHolder.getContext().setAuthentication(new PrincipalJwtAuthenticationConverter().convert(jwt));
     }
 }

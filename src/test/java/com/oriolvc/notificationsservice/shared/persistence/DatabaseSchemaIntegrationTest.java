@@ -41,7 +41,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
     @Test
     void primaryKeysAreBigserialWithOwnSequenceIncrementingByOne() {
-        var keys = jdbc.queryForList("""
+        final var keys = jdbc.queryForList("""
                 SELECT c.table_name, c.column_name, c.data_type, c.is_identity, c.column_default,
                        s.sequencename, s.increment_by
                 FROM information_schema.table_constraints tc
@@ -57,7 +57,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
                 """);
 
         assertThat(keys).hasSize(8).allSatisfy(key -> {
-            String sequence = key.get("table_name") + "_" + key.get("column_name") + "_seq";
+            final String sequence = key.get("table_name") + "_" + key.get("column_name") + "_seq";
             assertThat(key)
                     .containsEntry("data_type", "bigint")
                     .containsEntry("is_identity", "NO")
@@ -72,7 +72,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
         @Test
         void regulatoryDocumentMatchedTypeStoresTheSchemaFileTheSpecReferences() throws IOException {
-            String schemaFile = new ClassPathResource("schemas/regulatory-document-matched.v1.json")
+            final String schemaFile = new ClassPathResource("schemas/regulatory-document-matched.v1.json")
                     .getContentAsString(StandardCharsets.UTF_8);
 
             assertThat(jdbc.queryForObject(
@@ -85,7 +85,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
         @Test
         void regulatoryDocumentMatchedHasTheEmailTemplate() {
-            var template = jdbc.queryForMap(
+            final var template = jdbc.queryForMap(
                     "SELECT subject, body FROM notification_templates WHERE channel = 'EMAIL' AND notification_type_id = "
                             + TYPE_ID);
 
@@ -104,7 +104,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
         @Test
         void sameEventIsStoredOncePerCustomer() {
-            String insert =
+            final String insert =
                     "INSERT INTO notifications (notification_type_id, event_key, customer_id, parameters, outcome,"
                             + " created_at, created_by) VALUES (" + TYPE_ID
                             + ", repeat('a', 64), ?, '{}', 'ACCEPTED', now(), 'p')";
@@ -181,7 +181,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
         @Test
         void attemptNumberIsUniquePerDelivery() {
-            String insert = "INSERT INTO delivery_attempts (delivery_id, attempt_number, attempted_at, outcome)"
+            final String insert = "INSERT INTO delivery_attempts (delivery_id, attempt_number, attempted_at, outcome)"
                     + " VALUES (4001, 1, now(), 'RETRYABLE_ERROR')";
 
             assertThat(jdbc.update(insert)).isOne();
@@ -190,7 +190,7 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
                     .hasMessageContaining("uq_delivery_attempts_delivery_attempt_number");
         }
 
-        private int insertList(String name, boolean active) {
+        private int insertList(final String name, final boolean active) {
             return jdbc.update(
                     "INSERT INTO distribution_lists (customer_id, name, notification_type_id, channel, active,"
                             + " created_at, created_by, updated_at, updated_by)"

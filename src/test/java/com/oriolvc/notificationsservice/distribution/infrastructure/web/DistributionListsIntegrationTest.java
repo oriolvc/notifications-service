@@ -29,7 +29,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void createsAnActiveListInTheCallersTenant() {
-            MvcTestResult result = post("/distribution-lists", ADMIN_101, CREATE_BODY);
+            final MvcTestResult result = post("/distribution-lists", ADMIN_101, CREATE_BODY);
 
             assertThat(result).hasStatus(HttpStatus.CREATED);
             assertThat(result).headers().hasValue(HttpHeaders.LOCATION, "http://localhost/distribution-lists/1");
@@ -46,7 +46,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
         @Sql("/fixtures/distribution-lists.sql")
         @DisplayName("AC-21 second active list for the same (customer, type, channel) is a conflict")
         void secondActiveListIsAConflict() {
-            MvcTestResult result = post("/distribution-lists", ADMIN_101, CREATE_BODY);
+            final MvcTestResult result = post("/distribution-lists", ADMIN_101, CREATE_BODY);
 
             assertConflict(result, "already-exists");
             assertThat(countLists()).isEqualTo(3);
@@ -65,7 +65,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void unknownNotificationTypeIsUnprocessable() {
-            MvcTestResult result = post("/distribution-lists", ADMIN_101, """
+            final MvcTestResult result = post("/distribution-lists", ADMIN_101, """
                     {"name": "Lists", "notificationType": "UNKNOWN_TYPE", "channel": "EMAIL"}
                     """);
 
@@ -79,7 +79,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void blankNameIsMalformed() {
-            MvcTestResult result = post("/distribution-lists", ADMIN_101, """
+            final MvcTestResult result = post("/distribution-lists", ADMIN_101, """
                     {"name": "   ", "notificationType": "REGULATORY_DOCUMENT_MATCHED", "channel": "EMAIL"}
                     """);
 
@@ -97,7 +97,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void listsOnlyTheCallersTenantIncludingInactiveLists() {
-            MvcTestResult result = get("/distribution-lists", JwtTokens.viewer(101));
+            final MvcTestResult result = get("/distribution-lists", JwtTokens.viewer(101));
 
             assertThat(result).hasStatusOk();
             assertThat(result).bodyJson().extractingPath("$.items[*].id").isEqualTo(List.of(1001, 1002));
@@ -106,7 +106,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void getsOwnList() {
-            MvcTestResult result = get("/distribution-lists/1001", JwtTokens.viewer(101));
+            final MvcTestResult result = get("/distribution-lists/1001", JwtTokens.viewer(101));
 
             assertThat(result).hasStatusOk();
             assertThat(result).bodyJson().extractingPath("$.name").isEqualTo("Compliance team");
@@ -142,7 +142,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
         @Test
         void renamesAndBumpsTheVersion() {
-            MvcTestResult result =
+            final MvcTestResult result =
                     patch("/distribution-lists/1001", ADMIN_101, "{\"name\": \"QA team\", \"version\": 0}");
 
             assertThat(result).hasStatusOk();
@@ -158,7 +158,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
             assertThat(patch("/distribution-lists/1001", ADMIN_101, "{\"name\": \"First\", \"version\": 0}"))
                     .hasStatusOk();
 
-            MvcTestResult stale =
+            final MvcTestResult stale =
                     patch("/distribution-lists/1001", ADMIN_101, "{\"name\": \"Second\", \"version\": 0}");
 
             assertConflict(stale, "version-conflict");
@@ -184,7 +184,8 @@ class DistributionListsIntegrationTest extends IntegrationTest {
             assertThat(patch("/distribution-lists/1001", ADMIN_101, "{\"active\": false, \"version\": 0}"))
                     .hasStatusOk();
 
-            MvcTestResult result = patch("/distribution-lists/1002", ADMIN_101, "{\"active\": true, \"version\": 0}");
+            final MvcTestResult result =
+                    patch("/distribution-lists/1002", ADMIN_101, "{\"active\": true, \"version\": 0}");
 
             assertThat(result).hasStatusOk();
             assertThat(result).bodyJson().extractingPath("$.active").isEqualTo(true);
@@ -212,7 +213,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
                 .hasStatusOk();
         assertThat(delete("/distribution-lists/1", ADMIN_101)).hasStatus(HttpStatus.NO_CONTENT);
 
-        List<Map<String, Object>> revisions = jdbc.queryForList("""
+        final List<Map<String, Object>> revisions = jdbc.queryForList("""
                 SELECT a.revtype, a.name, a.active, r.user_id
                 FROM distribution_lists_aud a JOIN revinfo r ON r.rev = a.rev
                 WHERE a.id = 1 ORDER BY a.rev
@@ -226,7 +227,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
                         tuple(1, "Renamed", false, ADMIN_101_USER_ID));
     }
 
-    private void assertConflict(MvcTestResult result, String problemType) {
+    private void assertConflict(final MvcTestResult result, final String problemType) {
         assertThat(result).hasStatus(HttpStatus.CONFLICT);
         assertThat(result)
                 .bodyJson()
@@ -234,7 +235,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
                 .isEqualTo("urn:notifications-service:problem:" + problemType);
     }
 
-    private void assertNotFound(MvcTestResult result) {
+    private void assertNotFound(final MvcTestResult result) {
         assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
         assertThat(result).bodyJson().extractingPath("$.type").isEqualTo("urn:notifications-service:problem:not-found");
     }
@@ -243,18 +244,18 @@ class DistributionListsIntegrationTest extends IntegrationTest {
         return jdbc.queryForObject("SELECT count(*) FROM distribution_lists", Integer.class);
     }
 
-    private Map<String, Object> listRow(long id) {
+    private Map<String, Object> listRow(final long id) {
         return jdbc.queryForMap("SELECT name, active, version FROM distribution_lists WHERE id = ?", id);
     }
 
-    private MvcTestResult get(String uri, String token) {
+    private MvcTestResult get(final String uri, final String token) {
         return mvc.get()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
                 .exchange();
     }
 
-    private MvcTestResult post(String uri, String token, String body) {
+    private MvcTestResult post(final String uri, final String token, final String body) {
         return mvc.post()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
@@ -263,7 +264,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
                 .exchange();
     }
 
-    private MvcTestResult patch(String uri, String token, String body) {
+    private MvcTestResult patch(final String uri, final String token, final String body) {
         return mvc.patch()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
@@ -272,7 +273,7 @@ class DistributionListsIntegrationTest extends IntegrationTest {
                 .exchange();
     }
 
-    private MvcTestResult delete(String uri, String token) {
+    private MvcTestResult delete(final String uri, final String token) {
         return mvc.delete()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))

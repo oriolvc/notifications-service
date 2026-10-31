@@ -34,9 +34,9 @@ class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint,
-            ProblemDetailsAccessDeniedHandler accessDeniedHandler) {
+            final HttpSecurity http,
+            final ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint,
+            final ProblemDetailsAccessDeniedHandler accessDeniedHandler) {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
@@ -69,7 +69,7 @@ class SecurityConfig {
         return http.build();
     }
 
-    private static String[] names(Role... roles) {
+    private static String[] names(final Role... roles) {
         return Arrays.stream(roles).map(Role::name).toArray(String[]::new);
     }
 }

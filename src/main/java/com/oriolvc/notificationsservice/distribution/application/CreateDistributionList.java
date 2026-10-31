@@ -19,22 +19,22 @@ public class CreateDistributionList {
     private final DistributionListViews views;
 
     CreateDistributionList(
-            DistributionListRepository distributionListRepository,
-            NotificationTypeQuery notificationTypes,
-            DistributionListViews views) {
+            final DistributionListRepository distributionListRepository,
+            final NotificationTypeQuery notificationTypes,
+            final DistributionListViews views) {
         this.distributionListRepository = distributionListRepository;
         this.notificationTypes = notificationTypes;
         this.views = views;
     }
 
-    public DistributionListView execute(CreateDistributionListCommand command) {
-        NotificationTypeRef type = notificationTypes
+    public DistributionListView execute(final CreateDistributionListCommand command) {
+        final NotificationTypeRef type = notificationTypes
                 .findActiveByCode(command.notificationType())
                 .orElseThrow(() -> new UnprocessableException(
                         "Unknown or inactive notification type",
                         List.of(new Violation("/notificationType", "unknown or inactive notification type"))));
         // Duplicate names and a second active list are rejected by the unique constraints (409)
-        DistributionList distributionList = DistributionList.create(
+        final DistributionList distributionList = DistributionList.create(
                 command.tenantId(), DistributionList.normalizeName(command.name()), type.id(), command.channel());
         return views.of(distributionListRepository.save(distributionList));
     }

@@ -36,15 +36,15 @@ final class OpenApiContractMatcher implements ResultMatcher {
             .build();
 
     @Override
-    public void match(MvcResult result) {
-        int status = result.getResponse().getStatus();
+    public void match(final MvcResult result) {
+        final int status = result.getResponse().getStatus();
         if (status == HttpStatus.NOT_IMPLEMENTED.value()) {
             return;
         }
-        boolean rejectedByServer = status >= 400 && status < 500;
-        ValidationReport report =
+        final boolean rejectedByServer = status >= 400 && status < 500;
+        final ValidationReport report =
                 VALIDATOR.validate(MockMvcRequest.of(result.getRequest()), MockMvcResponse.of(result.getResponse()));
-        List<ValidationReport.Message> errors = report.getMessages().stream()
+        final List<ValidationReport.Message> errors = report.getMessages().stream()
                 .filter(message -> message.getLevel() == ValidationReport.Level.ERROR)
                 .filter(message -> !(rejectedByServer && message.getKey().startsWith("validation.request")))
                 .toList();
@@ -59,7 +59,7 @@ final class OpenApiContractMatcher implements ResultMatcher {
     private static String specUrl() {
         try {
             return new ClassPathResource(SPEC).getURL().toString();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
     }

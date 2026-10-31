@@ -23,9 +23,9 @@ class CleanDatabaseTestExecutionListener extends AbstractTestExecutionListener {
     }
 
     @Override
-    public void beforeTestMethod(TestContext testContext) {
-        JdbcTemplate jdbc = testContext.getApplicationContext().getBean(JdbcTemplate.class);
-        List<String> tables = jdbc
+    public void beforeTestMethod(final TestContext testContext) {
+        final JdbcTemplate jdbc = testContext.getApplicationContext().getBean(JdbcTemplate.class);
+        final List<String> tables = jdbc
                 .queryForList(
                         "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename", String.class)
                 .stream()

@@ -21,13 +21,16 @@ class ProblemDetailsAuthenticationEntryPoint implements AuthenticationEntryPoint
     private final AuthenticationEntryPoint bearer = new BearerTokenAuthenticationEntryPoint();
     private final HandlerExceptionResolver resolver;
 
-    ProblemDetailsAuthenticationEntryPoint(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+    ProblemDetailsAuthenticationEntryPoint(
+            @Qualifier("handlerExceptionResolver") final HandlerExceptionResolver resolver) {
         this.resolver = resolver;
     }
 
     @Override
     public void commence(
-            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
+            final HttpServletRequest request,
+            final HttpServletResponse response,
+            final AuthenticationException authException)
             throws IOException, ServletException {
         bearer.commence(request, response, authException);
         resolver.resolveException(request, response, null, authException);

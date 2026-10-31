@@ -10,7 +10,7 @@ public enum Role {
 
     private final boolean tenantScoped;
 
-    Role(boolean tenantScoped) {
+    Role(final boolean tenantScoped) {
         this.tenantScoped = tenantScoped;
     }
 
@@ -23,8 +23,8 @@ public enum Role {
         return "ROLE_" + name();
     }
 
-    static Optional<Role> fromClaim(String value) {
-        for (Role role : values()) {
+    static Optional<Role> fromClaim(final String value) {
+        for (final Role role : values()) {
             if (role.name().equals(value)) {
                 return Optional.of(role);
             }

@@ -38,12 +38,13 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
     private static final Logger log = LoggerFactory.getLogger(ProblemDetailsExceptionHandler.class);
 
     @ExceptionHandler(ProblemException.class)
-    ResponseEntity<Object> handleProblem(ProblemException ex, WebRequest request) {
+    ResponseEntity<Object> handleProblem(final ProblemException ex, final WebRequest request) {
         return problem(ex.type(), ex.getMessage(), ex.violations(), request);
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    ResponseEntity<Object> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex, WebRequest request) {
+    ResponseEntity<Object> handleOptimisticLocking(
+            final ObjectOptimisticLockingFailureException ex, final WebRequest request) {
         return problem(
                 ProblemType.VERSION_CONFLICT,
                 "The resource was modified concurrently; read it again and retry",
@@ -57,7 +58,8 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
      * violation means the application let invalid data through, so it stays a 500.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
-    ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+    ResponseEntity<Object> handleDataIntegrityViolation(
+            final DataIntegrityViolationException ex, final WebRequest request) {
         if (ex.getCause() instanceof ConstraintViolationException violation
                 && violation.getKind() == ConstraintKind.UNIQUE) {
             log.info("Unique constraint {} rejected the change", violation.getConstraintName());
@@ -68,25 +70,28 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    ResponseEntity<Object> handleAuthentication(AuthenticationException ex, WebRequest request) {
+    ResponseEntity<Object> handleAuthentication(final AuthenticationException ex, final WebRequest request) {
         return problem(ProblemType.UNAUTHORIZED, "A valid bearer token is required", List.of(), request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+    ResponseEntity<Object> handleAccessDenied(final AccessDeniedException ex, final WebRequest request) {
         return problem(ProblemType.FORBIDDEN, "The token lacks the role this operation requires", List.of(), request);
     }
 
     @ExceptionHandler(Exception.class)
-    ResponseEntity<Object> handleUnexpected(Exception ex, WebRequest request) {
+    ResponseEntity<Object> handleUnexpected(final Exception ex, final WebRequest request) {
         log.error("Unhandled exception", ex);
         return problem(ProblemType.INTERNAL_ERROR, "An unexpected error occurred", List.of(), request);
     }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        List<Violation> violations = ex.getBindingResult().getFieldErrors().stream()
+            final MethodArgumentNotValidException ex,
+            final HttpHeaders headers,
+            final HttpStatusCode status,
+            final WebRequest request) {
+        final List<Violation> violations = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> new Violation(toPointer(error), error.getDefaultMessage()))
                 .toList();
         return problem(ProblemType.MALFORMED_REQUEST, "The request body is invalid", violations, request);
@@ -94,8 +99,11 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
 
     @Override
     protected ResponseEntity<Object> handleHandlerMethodValidationException(
-            HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        List<Violation> violations = ex.getParameterValidationResults().stream()
+            final HandlerMethodValidationException ex,
+            final HttpHeaders headers,
+            final HttpStatusCode status,
+            final WebRequest request) {
+        final List<Violation> violations = ex.getParameterValidationResults().stream()
                 .flatMap(result -> result.getResolvableErrors().stream()
                         .map(error -> new Violation(
                                 result.getMethodParameter().getParameterName(), error.getDefaultMessage())))
@@ -105,18 +113,25 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+            final HttpMessageNotReadableException ex,
+            final HttpHeaders headers,
+            final HttpStatusCode status,
+            final WebRequest request) {
         return problem(ProblemType.MALFORMED_REQUEST, "The request body is not readable JSON", List.of(), request);
     }
 
     /** Every other Spring MVC exception: keep Spring's status and detail, add our type and request id. */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
-            Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+            final Exception ex,
+            final Object body,
+            final HttpHeaders headers,
+            final HttpStatusCode statusCode,
+            final WebRequest request) {
         // Spring passes a null body for most of its exceptions and builds the ProblemDetail in super
-        ResponseEntity<Object> response = super.handleExceptionInternal(ex, body, headers, statusCode, request);
+        final ResponseEntity<Object> response = super.handleExceptionInternal(ex, body, headers, statusCode, request);
         if (response != null && response.getBody() instanceof ProblemDetail problemDetail) {
-            ProblemType type = ProblemType.forStatus(statusCode.value());
+            final ProblemType type = ProblemType.forStatus(statusCode.value());
             problemDetail.setType(type.uri());
             problemDetail.setTitle(type.title());
             decorate(problemDetail, request);
@@ -125,8 +140,8 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
     }
 
     private ResponseEntity<Object> problem(
-            ProblemType type, String detail, List<Violation> violations, WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(type.status(), detail);
+            final ProblemType type, final String detail, final List<Violation> violations, final WebRequest request) {
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(type.status(), detail);
         problemDetail.setType(type.uri());
         problemDetail.setTitle(type.title());
         if (!violations.isEmpty()) {
@@ -136,19 +151,19 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
         return ResponseEntity.status(type.status()).body(problemDetail);
     }
 
-    private static void decorate(ProblemDetail problemDetail, WebRequest request) {
+    private static void decorate(final ProblemDetail problemDetail, final WebRequest request) {
         if (problemDetail.getInstance() == null && request instanceof ServletWebRequest servletRequest) {
-            HttpServletRequest httpRequest = servletRequest.getRequest();
+            final HttpServletRequest httpRequest = servletRequest.getRequest();
             problemDetail.setInstance(URI.create(httpRequest.getRequestURI()));
         }
-        String requestId = MDC.get(RequestIdFilter.MDC_KEY);
+        final String requestId = MDC.get(RequestIdFilter.MDC_KEY);
         if (requestId != null) {
             problemDetail.setProperty("requestId", requestId);
         }
     }
 
     /** {@code customerIds[0]} → {@code /customerIds/0}; {@code parameters.siteName} → {@code /parameters/siteName}. */
-    static String toPointer(FieldError error) {
+    static String toPointer(final FieldError error) {
         return "/" + error.getField().replaceAll("\\[(\\d+)]", ".$1").replace('.', '/');
     }
 }

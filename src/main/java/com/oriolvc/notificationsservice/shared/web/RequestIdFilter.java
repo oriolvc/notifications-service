@@ -28,7 +28,8 @@ public class RequestIdFilter extends OncePerRequestFilter {
     private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(
+            final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain)
             throws ServletException, IOException {
         String requestId = request.getHeader(HEADER);
         if (requestId == null || !VALID_ID.matcher(requestId).matches()) {

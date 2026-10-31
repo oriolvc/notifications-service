@@ -24,7 +24,7 @@ Spring Boot 4 is newer than most training data:
 ## Commands
 
 ```bash
-./mvnw verify                      # full build: codegen, all tests, JaCoCo gate (≥ 90 % lines). Must pass before any PR
+./mvnw verify                      # full build: codegen, all tests, Spotless + Checkstyle, JaCoCo gate (≥ 90 % lines). Must pass before any PR
 ./mvnw spotless:apply              # format (palantir-java-format)
 ./mvnw test -Dtest=ClassName       # single test class
 docker compose up -d               # local postgres:18 (5432) + Mailpit (SMTP 1025, UI http://localhost:8025)
@@ -78,6 +78,7 @@ Rules:
 
 **Java**
 - Records for value objects, commands and results. No Lombok.
+- Locals, parameters, catch parameters and for-each variables that are never reassigned are `final` (lambda parameters excepted). Checkstyle enforces it in `verify` (`config/checkstyle/checkstyle.xml`); formatting stays with Spotless.
 - `Optional` only as a return type.
 - `Instant` for timestamps. Inject `java.time.Clock`; never call `Instant.now()` directly.
 

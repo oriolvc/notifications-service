@@ -10,7 +10,7 @@ class RequestIdFilterIntegrationTest extends IntegrationTest {
 
     @Test
     void echoesTheCallerRequestIdAndPutsItInProblemDetails() {
-        MvcTestResult result = mvc.get()
+        final MvcTestResult result = mvc.get()
                 .uri("/notifications")
                 .header(RequestIdFilter.HEADER, "abc-123")
                 .exchange();
@@ -21,8 +21,8 @@ class RequestIdFilterIntegrationTest extends IntegrationTest {
 
     @Test
     void generatesARequestIdWhenMissingOrUnsafe() {
-        MvcTestResult missing = mvc.get().uri("/actuator/health").exchange();
-        MvcTestResult unsafe = mvc.get()
+        final MvcTestResult missing = mvc.get().uri("/actuator/health").exchange();
+        final MvcTestResult unsafe = mvc.get()
                 .uri("/actuator/health")
                 .header(RequestIdFilter.HEADER, "bad id\r\nX-Injected: 1")
                 .exchange();

@@ -46,17 +46,17 @@ public final class JwtTokens {
                 .claim("roles", List.of(Role.NOTIFICATION_PUBLISHER.name())));
     }
 
-    public static String listAdmin(long tenantId) {
+    public static String listAdmin(final long tenantId) {
         return user(tenantId, Role.DISTRIBUTION_LIST_ADMIN);
     }
 
-    public static String viewer(long tenantId) {
+    public static String viewer(final long tenantId) {
         return user(tenantId, Role.NOTIFICATION_VIEWER);
     }
 
     /** A customer user of {@code tenantId} with user id {@code user-<tenantId>-<first role>}. */
-    public static String user(long tenantId, Role... roles) {
-        String userId = "user-" + tenantId + "-" + roles[0].name().toLowerCase();
+    public static String user(final long tenantId, final Role... roles) {
+        final String userId = "user-" + tenantId + "-" + roles[0].name().toLowerCase();
         return token(claims -> claims.subject(userId)
                 .claim("userId", userId)
                 .claim("tenantId", tenantId)
@@ -64,62 +64,64 @@ public final class JwtTokens {
     }
 
     /** A valid token (issuer, audience, one hour expiry) with the given claims on top. */
-    public static String token(Consumer<JwtClaimsSet.Builder> claims) {
+    public static String token(final Consumer<JwtClaimsSet.Builder> claims) {
         return sign(DEV_ENCODER, claims, Duration.ofHours(1));
     }
 
-    static String token(Consumer<JwtClaimsSet.Builder> claims, Duration validity) {
+    static String token(final Consumer<JwtClaimsSet.Builder> claims, final Duration validity) {
         return sign(DEV_ENCODER, claims, validity);
     }
 
     /** A token that is valid except for being signed with an unknown key. */
-    public static String signedWithForeignKey(Consumer<JwtClaimsSet.Builder> claims) {
+    public static String signedWithForeignKey(final Consumer<JwtClaimsSet.Builder> claims) {
         try {
-            var generator = KeyPairGenerator.getInstance("RSA");
+            final var generator = KeyPairGenerator.getInstance("RSA");
             generator.initialize(2048);
-            var keyPair = generator.generateKeyPair();
-            RSAKey foreign = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+            final var keyPair = generator.generateKeyPair();
+            final RSAKey foreign = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
                     .privateKey(keyPair.getPrivate())
                     .build();
             return sign(encoder(foreign), claims, Duration.ofHours(1));
-        } catch (GeneralSecurityException e) {
+        } catch (final GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    public static String bearer(String token) {
+    public static String bearer(final String token) {
         return "Bearer " + token;
     }
 
-    private static String sign(JwtEncoder encoder, Consumer<JwtClaimsSet.Builder> customizer, Duration validity) {
-        Instant now = Instant.now();
-        JwtClaimsSet.Builder claims = JwtClaimsSet.builder()
+    private static String sign(
+            final JwtEncoder encoder, final Consumer<JwtClaimsSet.Builder> customizer, final Duration validity) {
+        final Instant now = Instant.now();
+        final JwtClaimsSet.Builder claims = JwtClaimsSet.builder()
                 .issuer(ISSUER)
                 .audience(List.of(AUDIENCE))
                 .issuedAt(now)
                 .expiresAt(now.plus(validity));
         customizer.accept(claims);
-        JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).build();
+        final JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims.build())).getTokenValue();
     }
 
-    private static JwtEncoder encoder(RSAKey key) {
+    private static JwtEncoder encoder(final RSAKey key) {
         return new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(key)));
     }
 
     private static RSAKey loadDevKey() {
         try {
-            String pem = new ClassPathResource("keys/local-jwt-private.pem").getContentAsString(StandardCharsets.UTF_8);
-            byte[] der = Base64.getMimeDecoder()
+            final String pem =
+                    new ClassPathResource("keys/local-jwt-private.pem").getContentAsString(StandardCharsets.UTF_8);
+            final byte[] der = Base64.getMimeDecoder()
                     .decode(pem.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", ""));
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            var privateKey = (RSAPrivateCrtKey) keyFactory.generatePrivate(new PKCS8EncodedKeySpec(der));
-            var publicKey = (RSAPublicKey) keyFactory.generatePublic(
+            final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            final var privateKey = (RSAPrivateCrtKey) keyFactory.generatePrivate(new PKCS8EncodedKeySpec(der));
+            final var publicKey = (RSAPublicKey) keyFactory.generatePublic(
                     new RSAPublicKeySpec(privateKey.getModulus(), privateKey.getPublicExponent()));
             return new RSAKey.Builder(publicKey).privateKey(privateKey).build();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException(e);
-        } catch (GeneralSecurityException e) {
+        } catch (final GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }
     }

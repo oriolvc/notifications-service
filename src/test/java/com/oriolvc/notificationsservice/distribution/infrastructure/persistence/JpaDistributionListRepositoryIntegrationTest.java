@@ -24,7 +24,7 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Test
     void savesANewListAndReadsItBack() {
-        DistributionList saved =
+        final DistributionList saved =
                 distributionListRepository.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
 
         assertThat(saved.id()).isNotNull();
@@ -44,12 +44,12 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Test
     void savingAChangeBumpsTheVersion() {
-        DistributionList distributionList =
+        final DistributionList distributionList =
                 distributionListRepository.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
 
         distributionList.rename("QA");
         distributionList.deactivate();
-        DistributionList updated = distributionListRepository.save(distributionList);
+        final DistributionList updated = distributionListRepository.save(distributionList);
 
         assertThat(updated.version()).isOne();
         assertThat(updated.name()).isEqualTo("QA");
@@ -62,12 +62,12 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Test
     void savingACopyReadBeforeAnotherChangeIsRejected() {
-        long id = distributionListRepository
+        final long id = distributionListRepository
                 .save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL))
                 .id();
-        DistributionList first =
+        final DistributionList first =
                 distributionListRepository.findByIdAndCustomerId(id, 101).orElseThrow();
-        DistributionList second =
+        final DistributionList second =
                 distributionListRepository.findByIdAndCustomerId(id, 101).orElseThrow();
 
         first.rename("First");

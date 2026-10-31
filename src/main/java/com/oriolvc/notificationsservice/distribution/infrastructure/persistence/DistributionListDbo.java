@@ -57,7 +57,7 @@ class DistributionListDbo extends AuditedDbo {
         return customerId;
     }
 
-    void setCustomerId(long customerId) {
+    void setCustomerId(final long customerId) {
         this.customerId = customerId;
     }
 
@@ -65,7 +65,7 @@ class DistributionListDbo extends AuditedDbo {
         return name;
     }
 
-    void setName(String name) {
+    void setName(final String name) {
         this.name = name;
     }
 
@@ -73,7 +73,7 @@ class DistributionListDbo extends AuditedDbo {
         return notificationTypeId;
     }
 
-    void setNotificationTypeId(long notificationTypeId) {
+    void setNotificationTypeId(final long notificationTypeId) {
         this.notificationTypeId = notificationTypeId;
     }
 
@@ -81,7 +81,7 @@ class DistributionListDbo extends AuditedDbo {
         return channel;
     }
 
-    void setChannel(Channel channel) {
+    void setChannel(final Channel channel) {
         this.channel = channel;
     }
 
@@ -89,7 +89,7 @@ class DistributionListDbo extends AuditedDbo {
         return active;
     }
 
-    void setActive(boolean active) {
+    void setActive(final boolean active) {
         this.active = active;
     }
 

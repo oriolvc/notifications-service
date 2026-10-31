@@ -6,7 +6,7 @@ import org.hibernate.envers.RevisionListener;
 class UserRevisionListener implements RevisionListener {
 
     @Override
-    public void newRevision(Object revisionEntity) {
+    public void newRevision(final Object revisionEntity) {
         ((RevisionInfo) revisionEntity).recordUser(Auditor.current());
     }
 }

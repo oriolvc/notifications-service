@@ -12,20 +12,20 @@ public class NotificationTypeQuery {
 
     private final NotificationTypeRepository types;
 
-    public NotificationTypeQuery(NotificationTypeRepository types) {
+    public NotificationTypeQuery(final NotificationTypeRepository types) {
         this.types = types;
     }
 
-    public Optional<NotificationTypeRef> findActiveByCode(String code) {
+    public Optional<NotificationTypeRef> findActiveByCode(final String code) {
         return types.findByCode(code).filter(NotificationType::active).map(NotificationTypeQuery::toRef);
     }
 
     /** Any type, active or not: existing lists keep referencing a type that was deactivated. */
-    public Optional<NotificationTypeRef> findById(long id) {
+    public Optional<NotificationTypeRef> findById(final long id) {
         return types.findById(id).map(NotificationTypeQuery::toRef);
     }
 
-    private static NotificationTypeRef toRef(NotificationType type) {
+    private static NotificationTypeRef toRef(final NotificationType type) {
         return new NotificationTypeRef(type.id(), type.code());
     }
 }
