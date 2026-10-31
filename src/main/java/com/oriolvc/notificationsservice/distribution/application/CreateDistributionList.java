@@ -8,7 +8,6 @@ import com.oriolvc.notificationsservice.shared.error.UnprocessableException;
 import com.oriolvc.notificationsservice.shared.error.Violation;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CreateDistributionList {
@@ -24,7 +23,6 @@ public class CreateDistributionList {
         this.views = views;
     }
 
-    @Transactional
     public DistributionListView execute(CreateDistributionListCommand command) {
         NotificationTypeRef type = notificationTypes
                 .findActiveByCode(command.notificationType())

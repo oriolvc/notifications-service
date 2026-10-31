@@ -8,7 +8,9 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Owns the transactions: reads are read-only, {@link #save} writes in its own transaction. */
 @Repository
+@Transactional(readOnly = true)
 class JpaDistributionListRepository implements DistributionListRepository {
 
     private final DistributionListDao dao;

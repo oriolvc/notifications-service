@@ -4,7 +4,6 @@ import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /** Soft delete (D-5). Idempotent: deleting an inactive list changes nothing. */
 @Service
@@ -16,7 +15,6 @@ public class DeleteDistributionList {
         this.lists = lists;
     }
 
-    @Transactional
     public void execute(DeleteDistributionListCommand command) {
         DistributionList list = lists.findByIdAndCustomerId(command.listId(), command.tenantId())
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));

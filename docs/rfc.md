@@ -84,7 +84,7 @@ The Notification context reads recipients through a port (`RecipientResolver`) i
 
 Package layout per context: `domain` (aggregates, value objects, ports; plain Java) · `application` (use cases) · `infrastructure` (web, persistence, email, scheduling).
 
-The persistence model is separate from the domain model: JPA/Envers mapping lives in DBOs in `infrastructure/persistence`, queried through Spring Data DAOs. A repository adapter implements each domain repository interface by calling its DAO and mapping DBO ↔ aggregate, so the domain carries no persistence annotations.
+The persistence model is separate from the domain model: JPA/Envers mapping lives in DBOs in `infrastructure/persistence`, queried through Spring Data DAOs. A repository adapter implements each domain repository interface by calling its DAO and mapping DBO ↔ aggregate, so the domain carries no persistence annotations. Transactions are opened by these repository adapters, not by the use cases: each repository call is one transaction, and data that must commit together is saved by a single repository call.
 
 Channel extension point:
 

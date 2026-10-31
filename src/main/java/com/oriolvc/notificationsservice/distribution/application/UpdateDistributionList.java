@@ -4,7 +4,6 @@ import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UpdateDistributionList {
@@ -17,7 +16,6 @@ public class UpdateDistributionList {
         this.views = views;
     }
 
-    @Transactional
     public DistributionListView execute(UpdateDistributionListCommand command) {
         DistributionList list = lists.findByIdAndCustomerId(command.listId(), command.tenantId())
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));

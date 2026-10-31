@@ -4,11 +4,9 @@ import com.oriolvc.notificationsservice.notification.domain.NotificationType;
 import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /** The notification type catalog, as seen from other contexts (e.g. distribution lists validating their type). */
 @Service
-@Transactional(readOnly = true)
 public class NotificationTypeQuery {
 
     private final NotificationTypeRepository types;
