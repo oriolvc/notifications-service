@@ -12,7 +12,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 ---
 
-## [ ] T0 — Bootstrap and tooling
+## [x] T0 — Bootstrap and tooling
 
 **Goal:** a clean, buildable skeleton with the quality gates in place from the first PR.
 
