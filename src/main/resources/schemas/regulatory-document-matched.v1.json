@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegulatoryDocumentMatchedParameters",
+  "description": "Parameters of a REGULATORY_DOCUMENT_MATCHED notification (v1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["siteName", "siteAddress", "authorityName", "documentType", "issueDate", "confidence"],
+  "properties": {
+    "siteName": { "type": "string", "minLength": 1, "maxLength": 300, "examples": ["Qualifyze Spain"] },
+    "siteAddress": { "type": "string", "minLength": 1, "maxLength": 500, "examples": ["Passeig de Gracia 19 Barcelona"] },
+    "authorityName": { "type": "string", "minLength": 1, "maxLength": 100, "examples": ["FDA"] },
+    "documentType": {
+      "oneOf": [
+        { "const": "WARNING_LETTER", "title": "warning letter" },
+        { "const": "OAI", "title": "OAI" },
+        { "const": "NON_COMPLIANCE_REPORT", "title": "non-compliance report" }
+      ]
+    },
+    "issueDate": { "type": "string", "format": "date", "examples": ["2026-06-12"] },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100, "examples": [80] }
+  }
+}

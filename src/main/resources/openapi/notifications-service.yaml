@@ -1,0 +1,801 @@
+openapi: 3.1.0
+info:
+  title: Notifications Service API
+  version: 1.0.0
+  description: |
+    Notifies customers' distribution lists when a regulatory document (warning letter, OAI,
+    non-compliance report) is matched to a manufacturing site, and keeps an auditable record of
+    every delivery. Design: `docs/rfc.md`.
+
+    **Authentication.** Every operation requires a bearer JWT with the claims `tenantId`, `userId`
+    and `roles`. The role each operation needs is listed in its description and in
+    `x-required-roles`.
+
+    **Tenancy.** Tenant-scoped operations take the tenant from the token, never from the request.
+    Resources of another tenant are reported as `404`.
+
+    **Errors.** All errors are RFC 9457 Problem Details (`application/problem+json`).
+servers:
+  - url: /
+security:
+  - bearerAuth: []
+tags:
+  - name: Notifications
+    description: Publish regulatory events and track their deliveries.
+  - name: DistributionLists
+    description: Self-service management of a customer's distribution lists and their members.
+
+paths:
+  /notifications:
+    post:
+      tags: [Notifications]
+      operationId: createNotification
+      summary: Publish an event and notify the affected customers
+      description: |
+        Validates the parameters against the type's schema, computes the event key and creates one
+        notification per customer. Customers already notified for the same event are reported as
+        `DUPLICATE` and are not notified again.
+
+        Returns `202` if at least one new notification was created, `200` if every customer had
+        already been notified (safe retries).
+
+        **Required role:** `NOTIFICATION_PUBLISHER`.
+      x-required-roles: [NOTIFICATION_PUBLISHER]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationRequest'
+            examples:
+              regulatoryDocumentMatched:
+                summary: FDA warning letter matched to a site
+                value:
+                  type: REGULATORY_DOCUMENT_MATCHED
+                  customerIds: [101, 102, 103]
+                  parameters:
+                    siteName: Qualifyze Spain
+                    siteAddress: Passeig de Gracia 19 Barcelona
+                    authorityName: FDA
+                    documentType: WARNING_LETTER
+                    issueDate: '2026-06-12'
+                    confidence: 80
+      responses:
+        '200':
+          description: Every customer had already been notified for this event; nothing new was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotificationResponse'
+        '202':
+          description: At least one new notification was created; deliveries are dispatched asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateNotificationResponse'
+              examples:
+                mixedOutcomes:
+                  value:
+                    eventKey: 9f2c4e0b8a7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a3928170615e4e1
+                    results:
+                      - { customerId: 101, notificationId: 501, outcome: ACCEPTED, deliveries: 4 }
+                      - { customerId: 102, notificationId: 502, outcome: NO_RECIPIENTS, deliveries: 0 }
+                      - { customerId: 103, notificationId: 377, outcome: DUPLICATE, deliveries: 3 }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+    get:
+      tags: [Notifications]
+      operationId: searchNotifications
+      summary: Search notifications
+      description: |
+        Publishers see every tenant. Tenant users only ever see notifications of their own tenant;
+        filtering by another tenant's `customerId` returns an empty result.
+
+        **Required role:** `NOTIFICATION_PUBLISHER`, `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
+      x-required-roles: [NOTIFICATION_PUBLISHER, DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
+      parameters:
+        - name: eventKey
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EventKey'
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CustomerId'
+      responses:
+        '200':
+          description: Matching notifications, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSearchResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /notifications/{notificationId}:
+    get:
+      tags: [Notifications]
+      operationId: getNotification
+      summary: Get a notification with its deliveries and attempts
+      description: |
+        Returns the notification, the rendered content and the status of every delivery, including
+        every attempt.
+
+        **Required role:** `NOTIFICATION_PUBLISHER`, `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
+      x-required-roles: [NOTIFICATION_PUBLISHER, DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '200':
+          description: The notification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /distribution-lists:
+    post:
+      tags: [DistributionLists]
+      operationId: createDistributionList
+      summary: Create a distribution list in the caller's tenant
+      description: |
+        A tenant can have at most one active list per (notification type, channel).
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDistributionListRequest'
+      responses:
+        '201':
+          description: The list was created.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+    get:
+      tags: [DistributionLists]
+      operationId: listDistributionLists
+      summary: List the caller's tenant distribution lists
+      description: |
+        Includes inactive (soft-deleted) lists.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
+      responses:
+        '200':
+          description: The tenant's lists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionListCollection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /distribution-lists/{listId}:
+    parameters:
+      - $ref: '#/components/parameters/ListId'
+    get:
+      tags: [DistributionLists]
+      operationId: getDistributionList
+      summary: Get a distribution list
+      description: |
+        **Required role:** `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
+      responses:
+        '200':
+          description: The list, including its current `version`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [DistributionLists]
+      operationId: updateDistributionList
+      summary: Rename, deactivate or reactivate a distribution list
+      description: |
+        Optimistic locking: `version` must be the one last read, otherwise `409`. Reactivating a
+        list while another active list exists for the same (type, channel) is also a `409`.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDistributionListRequest'
+      responses:
+        '200':
+          description: The updated list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [DistributionLists]
+      operationId: deleteDistributionList
+      summary: Deactivate (soft delete) a distribution list
+      description: |
+        Sets `active = false`. The list and its members are kept for the audit trail.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN]
+      responses:
+        '204':
+          description: The list is inactive.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /distribution-lists/{listId}/members:
+    parameters:
+      - $ref: '#/components/parameters/ListId'
+    post:
+      tags: [DistributionLists]
+      operationId: addDistributionListMember
+      summary: Add a member to a distribution list
+      description: |
+        The address is validated for the list's channel. Re-adding a removed address reactivates
+        it. An address that is already active is a `409`. A list holds at most 100 active members;
+        adding beyond that is a `422`.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '201':
+          description: The member was added or reactivated.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+    get:
+      tags: [DistributionLists]
+      operationId: listDistributionListMembers
+      summary: List the members of a distribution list
+      description: |
+        Includes removed (inactive) members.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
+      responses:
+        '200':
+          description: The list's members.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberCollection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /distribution-lists/{listId}/members/{memberId}:
+    parameters:
+      - $ref: '#/components/parameters/ListId'
+      - $ref: '#/components/parameters/MemberId'
+    delete:
+      tags: [DistributionLists]
+      operationId: removeDistributionListMember
+      summary: Remove (soft delete) a member
+      description: |
+        Sets `active = false`. Deliveries already accepted for this member are still sent to the
+        address captured at acceptance.
+
+        **Required role:** `DISTRIBUTION_LIST_ADMIN`.
+      x-required-roles: [DISTRIBUTION_LIST_ADMIN]
+      responses:
+        '204':
+          description: The member is inactive.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT with the claims `tenantId` (customer id; absent for service accounts), `userId` and
+        `roles` (`NOTIFICATION_PUBLISHER`, `DISTRIBUTION_LIST_ADMIN`, `NOTIFICATION_VIEWER`).
+
+  parameters:
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Id'
+    ListId:
+      name: listId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Id'
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Id'
+
+  headers:
+    Location:
+      description: URI of the created resource.
+      schema:
+        type: string
+        format: uri-reference
+
+  responses:
+    BadRequest:
+      description: Malformed request (syntax, types, sizes or formats).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Missing, expired or invalid token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: The token lacks the required role.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The resource does not exist or belongs to another tenant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Stale `version`, or the change conflicts with an existing resource.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableContent:
+      description: |
+        The request is well formed but semantically invalid: unknown or inactive notification
+        type, parameters violating the type's schema, or a business limit reached.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    # ---------- Common ----------
+    Id:
+      type: integer
+      format: int64
+      minimum: 1
+    CustomerId:
+      description: Customer (tenant) id.
+      type: integer
+      format: int64
+      minimum: 1
+    CustomerIds:
+      type: array
+      minItems: 1
+      maxItems: 100
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/CustomerId'
+    EventKey:
+      description: SHA-256 (hex) of the type code and the canonical, normalized parameters. The event reference.
+      type: string
+      pattern: '^[0-9a-f]{64}$'
+    NotificationTypeCode:
+      description: Code of a notification type, e.g. `REGULATORY_DOCUMENT_MATCHED`.
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]{0,99}$'
+    Channel:
+      type: string
+      enum: [EMAIL]
+    AuditInfo:
+      type: object
+      required: [createdAt, createdBy, updatedAt, updatedBy]
+      properties:
+        createdAt: { type: string, format: date-time }
+        createdBy: { type: string }
+        updatedAt: { type: string, format: date-time }
+        updatedBy: { type: string }
+
+    Problem:
+      description: RFC 9457 Problem Details.
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: Stable identifier of the problem type.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        requestId:
+          type: string
+          description: Value of the `X-Request-Id` header, for correlation with logs.
+        violations:
+          description: Present on `400` and `422` validation problems.
+          type: array
+          items:
+            $ref: '#/components/schemas/Violation'
+    Violation:
+      type: object
+      required: [pointer, message]
+      properties:
+        pointer:
+          type: string
+          description: JSON Pointer (RFC 6901) to the offending value in the request, e.g. `/parameters/confidence`.
+        message:
+          type: string
+
+    # ---------- Notifications ----------
+    CreateNotificationRequest:
+      description: One variant per notification type, selected by `type`.
+      oneOf:
+        - $ref: '#/components/schemas/RegulatoryDocumentMatchedRequest'
+      discriminator:
+        propertyName: type
+        mapping:
+          REGULATORY_DOCUMENT_MATCHED: '#/components/schemas/RegulatoryDocumentMatchedRequest'
+    RegulatoryDocumentMatchedRequest:
+      type: object
+      additionalProperties: false
+      required: [type, customerIds, parameters]
+      properties:
+        type:
+          type: string
+          const: REGULATORY_DOCUMENT_MATCHED
+        customerIds:
+          $ref: '#/components/schemas/CustomerIds'
+        parameters:
+          $ref: '#/components/schemas/RegulatoryDocumentMatchedParameters'
+    RegulatoryDocumentMatchedParameters:
+      $ref: '../schemas/regulatory-document-matched.v1.json'
+
+    CreateNotificationResponse:
+      type: object
+      required: [eventKey, results]
+      properties:
+        eventKey:
+          $ref: '#/components/schemas/EventKey'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerResult'
+    CustomerResult:
+      type: object
+      required: [customerId, notificationId, outcome, deliveries]
+      properties:
+        customerId:
+          $ref: '#/components/schemas/CustomerId'
+        notificationId:
+          $ref: '#/components/schemas/Id'
+        outcome:
+          $ref: '#/components/schemas/CustomerOutcome'
+        deliveries:
+          description: Number of deliveries of the (new or existing) notification.
+          type: integer
+          format: int32
+          minimum: 0
+    CustomerOutcome:
+      type: string
+      enum: [ACCEPTED, NO_RECIPIENTS, DUPLICATE]
+    NotificationOutcome:
+      type: string
+      enum: [ACCEPTED, NO_RECIPIENTS]
+
+    NotificationSearchResult:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationSummary'
+    NotificationSummary:
+      type: object
+      required: [id, type, eventKey, customerId, outcome, createdAt, createdBy]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        type:
+          $ref: '#/components/schemas/NotificationTypeCode'
+        eventKey:
+          $ref: '#/components/schemas/EventKey'
+        customerId:
+          $ref: '#/components/schemas/CustomerId'
+        outcome:
+          $ref: '#/components/schemas/NotificationOutcome'
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+    NotificationDetail:
+      type: object
+      required: [id, type, eventKey, customerId, outcome, parameters, createdAt, createdBy, deliveries]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        type:
+          $ref: '#/components/schemas/NotificationTypeCode'
+        eventKey:
+          $ref: '#/components/schemas/EventKey'
+        customerId:
+          $ref: '#/components/schemas/CustomerId'
+        outcome:
+          $ref: '#/components/schemas/NotificationOutcome'
+        parameters:
+          description: The normalized parameters, as validated against the type's schema.
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Delivery'
+    Delivery:
+      type: object
+      required: [id, distributionListId, memberId, channel, address, body, status, attemptCount, attempts]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        distributionListId:
+          $ref: '#/components/schemas/Id'
+        memberId:
+          $ref: '#/components/schemas/Id'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        address:
+          description: Recipient address captured when the notification was accepted.
+          type: string
+        subject:
+          description: Rendered subject. Absent for channels without a subject.
+          type: string
+        body:
+          description: Exact rendered content sent to the recipient.
+          type: string
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        attemptCount:
+          type: integer
+          format: int32
+          minimum: 0
+        nextAttemptAt:
+          description: When the next attempt is due. Only for `PENDING` deliveries.
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+        providerMessageId:
+          type: string
+        attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryAttempt'
+    DeliveryStatus:
+      type: string
+      enum: [PENDING, SENT, FAILED]
+    DeliveryAttempt:
+      type: object
+      required: [attemptNumber, attemptedAt, outcome]
+      properties:
+        attemptNumber:
+          type: integer
+          format: int32
+          minimum: 1
+        attemptedAt:
+          type: string
+          format: date-time
+        outcome:
+          $ref: '#/components/schemas/AttemptOutcome'
+        providerMessageId:
+          type: string
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+    AttemptOutcome:
+      type: string
+      enum: [SUCCESS, RETRYABLE_ERROR, PERMANENT_ERROR]
+
+    # ---------- Distribution lists ----------
+    ListName:
+      type: string
+      minLength: 1
+      maxLength: 200
+    CreateDistributionListRequest:
+      type: object
+      additionalProperties: false
+      required: [name, notificationType, channel]
+      properties:
+        name:
+          $ref: '#/components/schemas/ListName'
+        notificationType:
+          $ref: '#/components/schemas/NotificationTypeCode'
+        channel:
+          $ref: '#/components/schemas/Channel'
+    UpdateDistributionListRequest:
+      description: Fields that are absent are left unchanged.
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        name:
+          $ref: '#/components/schemas/ListName'
+        active:
+          type: boolean
+        version:
+          description: The `version` last read; a mismatch is a `409`.
+          type: integer
+          format: int64
+          minimum: 0
+    DistributionList:
+      allOf:
+        - type: object
+          required: [id, name, notificationType, channel, active, version]
+          properties:
+            id:
+              $ref: '#/components/schemas/Id'
+            name:
+              $ref: '#/components/schemas/ListName'
+            notificationType:
+              $ref: '#/components/schemas/NotificationTypeCode'
+            channel:
+              $ref: '#/components/schemas/Channel'
+            active:
+              type: boolean
+            version:
+              type: integer
+              format: int64
+              minimum: 0
+        - $ref: '#/components/schemas/AuditInfo'
+    DistributionListCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistributionList'
+
+    AddMemberRequest:
+      type: object
+      additionalProperties: false
+      required: [address]
+      properties:
+        address:
+          description: Recipient address for the list's channel (an email address for `EMAIL`).
+          type: string
+          minLength: 1
+          maxLength: 320
+    Member:
+      allOf:
+        - type: object
+          required: [id, address, active]
+          properties:
+            id:
+              $ref: '#/components/schemas/Id'
+            address:
+              type: string
+            active:
+              type: boolean
+        - $ref: '#/components/schemas/AuditInfo'
+    MemberCollection:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'

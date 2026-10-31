@@ -36,7 +36,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** CI is green, and the app starts locally against compose.
 
-## [ ] T1 — API contract
+## [x] T1 — API contract
 
 **Goal:** the full API reviewed before any implementation (contract-first). RFC §6, §6.3, §7.2.
 
@@ -51,7 +51,7 @@ T4→T5 and T6 are independent and can be done in parallel.
   - `schemaMappings` for `*Parameters` → `JsonNode`
   - `validateSpec=true`
   - Check the generated `oneOf` output early; if it's unusable, apply the fallback noted in RFC §6.3 and record it in the RFC.
-- Serve the spec and the schema files as static resources so Swagger UI resolves the external `$ref`. Point springdoc's Swagger UI at the static spec and disable springdoc's own spec generation.
+- Serve the spec and the schema files as static resources so Swagger UI resolves the external `$ref`. Point springdoc's Swagger UI at the static spec. springdoc's own spec generation can't be disabled without losing Swagger UI, so `/v3/api-docs` is denied by security instead (RFC §6.3).
 
 **Done when:** the build generates the interfaces, and Swagger UI shows the complete API. No controllers yet.
 

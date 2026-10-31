@@ -177,9 +177,11 @@ Response **202 Accepted** (at least one new notification) or **200 OK** (all cus
 
 | Status | When |
 |---|---|
-| 400 | Malformed body, empty or duplicated `customerIds`, more than 100 customers |
+| 400 | Malformed body, empty `customerIds`, more than 100 customers |
 | 401 / 403 | Missing/invalid token, missing role |
 | 422 | Unknown or inactive `type`; `parameters` do not satisfy the type schema |
+
+Duplicated `customerIds` are not an error: the generated DTO binds `uniqueItems` to a `Set`, so a customer listed twice is processed once.
 
 **`GET /notifications/{id}`**: notification, rendered content and per-recipient delivery status with attempts.
 **`GET /notifications?eventKey=…&customerId=…`**: search. Tenant users are always filtered to their own tenant.
@@ -198,7 +200,8 @@ Response **202 Accepted** (at least one new notification) or **200 OK** (all cus
 | DELETE | `/distribution-lists/{id}/members/{memberId}` | Soft delete → 204 |
 
 There is no member PATCH: changing an address is a remove plus an add. This keeps the audit trail unambiguous.
-Limit: 100 active members per list.
+Limit: 100 active members per list. Adding a member beyond it → 422 (a business rule, not a conflict with another resource).
+Reactivating a list (`PATCH active=true`) while another active list exists for the same (type, channel) → 409.
 
 ### 6.3 Parameter schemas: single source of truth
 
@@ -226,6 +229,8 @@ src/main/resources/
 
 - **Versioned files.** Liquibase checksums include the file content, so an applied file is never edited. A change means a new `…v2.json`, a new changeset updating the row, and the spec pointing to v2. Stored notifications keep their original parameters.
 - **One validation path.** Generated DTOs map the per-type `parameters` schemas to a generic JSON type (openapi-generator `schemaMappings` → `JsonNode`). The web adapter builds the generic command (`type`, `customerIds`, `parameters`). The JSON Schema validator remains the only parameter validator, so every violation returns the same 422 response, not a mix of Jackson 400s and Bean Validation errors.
+- **Generated `oneOf` (openapi-generator 7.26, `spring`).** With a single variant the generator flattens the `oneOf` into one concrete `CreateNotificationRequest` class (`type` enum, `customerIds`, `parameters: JsonNode`). From two variants on it generates an interface with `@JsonTypeInfo`/`@JsonSubTypes` and one class per variant. The web adapter only reads `type`, `customerIds` and `parameters`, so adding the second type changes that mapping only. An unknown `type` fails Jackson deserialization in both shapes; the error handler maps it to the same 422 as an unknown type in the catalog (AC-11).
+- **Swagger UI.** The spec and the schema files are served as static resources (`/openapi/**`, `/schemas/**`) with the same relative layout, so Swagger UI resolves the external `$ref`. springdoc's Swagger UI points at the static spec. springdoc cannot disable its runtime spec generation without also disabling Swagger UI, so `/v3/api-docs` stays enabled but the security chain denies it; only `/v3/api-docs/swagger-config` is public.
 - **Drift guard.** A test asserts that every active `notification_types` row has a matching discriminator mapping in the spec, and that its stored `parameters_schema` equals the referenced file.
 - **Adding a type:** schema file + spec variant + Liquibase changeset (type and templates). This takes a release, which is consistent with D-6.
 

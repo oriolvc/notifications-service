@@ -17,3 +17,9 @@ management:
     web:
       exposure:
         include: health
+
+# Swagger UI renders the contract-first spec served from classpath:/openapi (ApiDocumentationConfig).
+# springdoc's generated spec cannot be switched off without losing Swagger UI, so SecurityConfig denies /v3/api-docs.
+springdoc:
+  swagger-ui:
+    url: /openapi/notifications-service.yaml
