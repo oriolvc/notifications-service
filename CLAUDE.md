@@ -1,0 +1,133 @@
+# CLAUDE.md
+
+Notification service for the Qualifyze Backend Chapter Lead challenge. When a regulatory document (warning letter, OAI, non-compliance report) is matched to a manufacturing site, it notifies the affected customers' distribution lists (email first, more channels later) and keeps an auditable record of everything.
+
+## Read first
+
+| Doc | What it is |
+|---|---|
+| `docs/challenge.md` | The original challenge: requirements (FR.1.x), deliverables, evaluation criteria |
+| `docs/rfc.md` | **The design and the source of truth** for behaviour, API, data model, assumptions (A-x), decisions (D-x), acceptance criteria (AC-x) |
+| `docs/tasks.md` | PR breakdown and status. Work on **one task at a time** |
+
+If the implementation needs to diverge from the RFC, stop and ask. Once agreed, update `docs/rfc.md` in the same PR.
+
+## Stack
+
+Java 25 · Spring Boot 4.1 (Spring Framework 7, Hibernate 7, Jackson 3) · Liquibase 5 · PostgreSQL 18 · Maven wrapper.
+
+Spring Boot 4 is newer than most training data:
+- Starters are modular (`spring-boot-starter-webmvc`, `spring-boot-starter-data-jpa-test`, …) and test-slice annotations moved packages.
+- Jackson 3 lives in `tools.jackson.*` (annotations stay in `com.fasterxml.jackson.annotation`).
+- **Don't guess** package names, class names or config properties. Check the jars in `~/.m2` or the official docs.
+
+## Commands
+
+```bash
+./mvnw verify                      # full build: codegen, all tests, JaCoCo gate (≥ 90 % lines). Must pass before any PR
+./mvnw spotless:apply              # format (palantir-java-format)
+./mvnw test -Dtest=ClassName       # single test class
+docker compose up -d               # local postgres:18 (5432) + Mailpit (SMTP 1025, UI http://localhost:8025)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Integration tests use Testcontainers, so Docker must be running. (Spotless, compose and the coverage gate are introduced in task T0.)
+
+## Architecture
+
+Single deployable, hexagonal, two bounded contexts plus a small shared kernel.
+
+```
+com.oriolvc.notificationsservice
+├── distribution/              who receives what: distribution lists and members
+│   ├── domain/                aggregates, value objects, repository interfaces
+│   ├── application/           use cases, commands, query services
+│   └── infrastructure/
+│       ├── web/               controllers implementing generated API interfaces + DTO mappers
+│       └── persistence/       Spring Data repositories
+├── notification/              types, templates, notifications, deliveries, dispatch
+│   ├── domain/
+│   ├── application/           incl. ports: RecipientResolver, ChannelSender
+│   └── infrastructure/
+│       ├── web/
+│       ├── persistence/
+│       ├── distribution/      RecipientResolver adapter → distribution application layer
+│       ├── channel/email/     EmailChannelSender
+│       └── scheduling/        dispatcher triggers
+└── shared/                    security, tenancy, auditing, error handling, config
+```
+
+Rules:
+- Dependencies point inward: `infrastructure → application → domain`.
+- `notification` reaches `distribution` **only** through the `RecipientResolver` port. Never import `distribution.domain` or its repositories from `notification`. The reverse direction (validating a notification type code) goes through a query service in `notification.application`.
+- **Pragmatic persistence:** aggregates are JPA entities (JPA and Envers annotations are allowed in `domain`), so there is no separate persistence model. Domain repository interfaces are plain Java; the Spring Data interfaces in `infrastructure/persistence` extend them.
+- Aggregates protect their invariants: no public setters, static factories, intention-revealing methods (`deactivate()`, `addMember(...)`).
+- **Use cases:** one class per use case, `@Transactional`, a single public method `execute(Command)`. Commands and results are records.
+- Generated OpenAPI code (DTOs, interfaces) never leaks past `infrastructure/web`.
+
+## Conventions
+
+**Java**
+- Records for value objects, commands and results. No Lombok.
+- `Optional` only as a return type.
+- `Instant` for timestamps. Inject `java.time.Clock`; never call `Instant.now()` directly.
+
+**API (contract-first)**
+- `src/main/resources/openapi/notifications-service.yaml` (OpenAPI 3.1) is the source of truth. Change the spec first, regenerate, then implement.
+- Parameter schemas live in `src/main/resources/schemas/<type>.vN.json`. The spec `$ref`s them and Liquibase loads them (`valueClobFile`). **Never edit an existing `vN`**; add `vN+1` (RFC §6.3).
+- Errors are RFC 9457 `ProblemDetail`, built by one `@RestControllerAdvice` with stable `type` URIs:
+  - 400: malformed request
+  - 422: semantic validation (unknown type, schema violations)
+  - 409: version conflict or duplicate
+  - 404: missing resource **or another tenant's resource** (never 403 for cross-tenant)
+
+**Persistence**
+- `spring.jpa.hibernate.ddl-auto=validate`. The schema comes only from Liquibase YAML.
+- Changesets go in `db/changelog/changes/NNN-description.yaml`, included from `db.changelog-master.yaml`. **Never edit an applied changeset**; add a new one. Envers `revinfo` and `_aud` tables are Liquibase too.
+- Tables and columns are snake_case (tables plural). Enums are stored as `text` with a `CHECK` constraint.
+- Lists and members are soft deleted only (`active = false`). Optimistic locking uses `@Version`; a stale version returns 409.
+- Audit columns come from Spring Data auditing (`AuditorAware` = JWT `userId`, or the client id for service tokens). Envers revisions store the same user id.
+
+**Security**
+- OAuth2 resource server. JWT claims: `tenantId`, `userId`, `roles`.
+- Roles:
+  - `NOTIFICATION_PUBLISHER`: service account, cross-tenant
+  - `DISTRIBUTION_LIST_ADMIN`: tenant-scoped
+  - `NOTIFICATION_VIEWER`: tenant-scoped
+- Endpoint authorization lives in **one place**, the `SecurityFilterChain`, and mirrors the spec. Tenant scoping happens in the application layer.
+- For tenant-scoped endpoints the tenant **always comes from the JWT**, never from the request.
+
+**Logging**
+- SLF4J with a request id in MDC.
+- **Never log email addresses, rendered bodies or parameters.** Log ids only.
+
+**Dependencies**
+- Add only what the current task needs.
+- Prefer versions managed by the Boot BOM; put other versions in `<properties>`.
+
+## Testing
+
+- **Unit** (domain and application): JUnit + AssertJ. Prefer hand-written fakes for ports over Mockito.
+- **Integration:** classes named `*IntegrationTest`, extending the `IntegrationTest` base, which provides:
+  - Testcontainers `postgres:18` (singleton, `@ServiceConnection`)
+  - GreenMail
+  - MockMvc
+  - JWT helpers per role
+  - validation of requests and responses against the OpenAPI spec
+
+  Exercise the HTTP API end to end.
+- **Fixtures:** `src/test/resources/fixtures/*.sql` loaded with `@Sql`. Each test starts from a clean DB (the base class truncates); never depend on test order.
+- Tests that prove an acceptance criterion carry its id: `@DisplayName("AC-5 same event posted twice is reported as duplicate")`.
+- **Coverage:** JaCoCo line coverage ≥ 90 % is enforced in `verify`; generated code and the `Application` class are excluded. Test behaviour, not getters.
+
+## Workflow
+
+- One task in `docs/tasks.md` = one branch = one PR. Branch names look like `T04-distribution-lists`.
+- Use conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`).
+- Before opening a PR:
+  - `./mvnw verify` is green
+  - Spotless has been applied
+  - the task is ticked in `docs/tasks.md`
+  - `docs/rfc.md` is updated if the design changed
+- PR description: what and why, the ACs covered, anything deferred.
+- Keep PRs reviewable. If a task grows beyond its scope, propose a split before continuing.

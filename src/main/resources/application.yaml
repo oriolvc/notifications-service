@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: qualifyze_challenge
