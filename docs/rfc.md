@@ -335,7 +335,7 @@ Result:
 
 ## 10. Data model
 
-Conventions: `bigint` identity PKs. All mutable tables have `created_at`, `created_by`, `updated_at`, `updated_by` (Spring Data auditing; `AuditorAware` = `userId` or service client id from the JWT) and `version` for optimistic locking. `channel` is `text` with a `CHECK (channel IN ('EMAIL'))` constraint, widened by migration when a channel is added.
+Conventions: bigserial PKs: `bigint` with `DEFAULT nextval('<table>_<column>_seq')`, a sequence per table incrementing by 1 and owned by the column (no identity columns). Entities use `GenerationType.SEQUENCE` with that sequence and `allocationSize = 1`. All mutable tables have `created_at`, `created_by`, `updated_at`, `updated_by` (Spring Data auditing; `AuditorAware` = `userId` or service client id from the JWT) and `version` for optimistic locking. `channel` is `text` with a `CHECK (channel IN ('EMAIL'))` constraint, widened by migration when a channel is added.
 
 ```
 Table notification_types {               // seeded by Liquibase
@@ -433,7 +433,7 @@ Table delivery_attempts {                // append-only
 }
 
 // Envers
-Table revinfo { rev bigint [pk, increment], rev_timestamp timestamptz [not null], user_id text [not null] }
+Table revinfo { rev bigserial [pk], rev_timestamp timestamptz [not null], user_id text [not null] }
 Table distribution_lists_aud { ... + rev, revtype }
 Table distribution_list_members_aud { ... + rev, revtype }
 ```

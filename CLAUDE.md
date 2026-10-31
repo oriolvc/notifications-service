@@ -85,6 +85,14 @@ Rules:
 - `spring.jpa.hibernate.ddl-auto=validate`. The schema comes only from Liquibase YAML.
 - Changesets go in `db/changelog/changes/NNN-description.yaml`, included from `db.changelog-master.yaml`. **Never edit an applied changeset**; add a new one. Envers `revinfo` and `_aud` tables are Liquibase too.
 - Tables and columns are snake_case (tables plural). Enums are stored as `text` with a `CHECK` constraint.
+- Primary keys are bigserial: a `bigint` column with `DEFAULT nextval('<table>_<column>_seq')` and its own sequence (increment 1, `OWNED BY` the column). Liquibase turns `type: bigserial`/`autoIncrement` into an identity column on Postgres, so write the `createSequence` + `defaultValueSequenceNext` + `ALTER SEQUENCE … OWNED BY` explicitly (see `001-create-notification-types.yaml`). Never use identity columns.
+- Entities map ids with that sequence and `allocationSize = 1` (never `IDENTITY`, never the default 50):
+  ```java
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "distribution_lists_id_seq")
+  @SequenceGenerator(name = "distribution_lists_id_seq", sequenceName = "distribution_lists_id_seq", allocationSize = 1)
+  private Long id;
+  ```
 - Lists and members are soft deleted only (`active = false`). Optimistic locking uses `@Version`; a stale version returns 409.
 - Audit columns come from Spring Data auditing (`AuditorAware` = JWT `userId`, or the client id for service tokens). Envers revisions store the same user id.
 

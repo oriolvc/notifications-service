@@ -5,12 +5,19 @@ databaseChangeLog:
       id: 005-create-revinfo
       author: oriolvc
       changes:
+        - createSequence:
+            sequenceName: revinfo_rev_seq
+            dataType: bigint
+            startValue: 1
+            incrementBy: 1
         - createTable:
             tableName: revinfo
             columns:
-              - column: { name: rev, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_revinfo } }
+              - column: { name: rev, type: bigint, defaultValueSequenceNext: revinfo_rev_seq, constraints: { primaryKey: true, primaryKeyName: pk_revinfo } }
               - column: { name: rev_timestamp, type: timestamptz, constraints: { nullable: false } }
               - column: { name: user_id, type: text, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER SEQUENCE revinfo_rev_seq OWNED BY revinfo.rev
 
   - changeSet:
       id: 005-create-distribution-lists-aud

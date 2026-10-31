@@ -3,10 +3,15 @@ databaseChangeLog:
       id: 003-create-distribution-lists
       author: oriolvc
       changes:
+        - createSequence:
+            sequenceName: distribution_lists_id_seq
+            dataType: bigint
+            startValue: 1
+            incrementBy: 1
         - createTable:
             tableName: distribution_lists
             columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_distribution_lists } }
+              - column: { name: id, type: bigint, defaultValueSequenceNext: distribution_lists_id_seq, constraints: { primaryKey: true, primaryKeyName: pk_distribution_lists } }
               - column: { name: customer_id, type: bigint, constraints: { nullable: false } }
               - column: { name: name, type: text, constraints: { nullable: false } }
               - column:
@@ -20,6 +25,8 @@ databaseChangeLog:
               - column: { name: created_by, type: text, constraints: { nullable: false } }
               - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
               - column: { name: updated_by, type: text, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER SEQUENCE distribution_lists_id_seq OWNED BY distribution_lists.id
         - addUniqueConstraint:
             tableName: distribution_lists
             columnNames: customer_id, name
@@ -35,10 +42,15 @@ databaseChangeLog:
       id: 003-create-distribution-list-members
       author: oriolvc
       changes:
+        - createSequence:
+            sequenceName: distribution_list_members_id_seq
+            dataType: bigint
+            startValue: 1
+            incrementBy: 1
         - createTable:
             tableName: distribution_list_members
             columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, primaryKeyName: pk_distribution_list_members } }
+              - column: { name: id, type: bigint, defaultValueSequenceNext: distribution_list_members_id_seq, constraints: { primaryKey: true, primaryKeyName: pk_distribution_list_members } }
               - column:
                   name: distribution_list_id
                   type: bigint
@@ -50,6 +62,8 @@ databaseChangeLog:
               - column: { name: created_by, type: text, constraints: { nullable: false } }
               - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
               - column: { name: updated_by, type: text, constraints: { nullable: false } }
+        - sql:
+            sql: ALTER SEQUENCE distribution_list_members_id_seq OWNED BY distribution_list_members.id
         - sql:
             sql: >-
               CREATE UNIQUE INDEX uq_distribution_list_members_list_address

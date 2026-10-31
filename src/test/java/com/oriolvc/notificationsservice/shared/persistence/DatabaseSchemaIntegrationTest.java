@@ -44,6 +44,34 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
                 .doesNotContain("seed_parameters_schemas");
     }
 
+    @Test
+    void primaryKeysAreBigserialWithOwnSequenceIncrementingByOne() {
+        var keys = jdbc.queryForList("""
+                SELECT c.table_name, c.column_name, c.data_type, c.is_identity, c.column_default,
+                       s.sequencename, s.increment_by
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage k
+                  ON k.constraint_name = tc.constraint_name AND k.table_schema = tc.table_schema
+                JOIN information_schema.columns c
+                  ON c.table_schema = k.table_schema AND c.table_name = k.table_name AND c.column_name = k.column_name
+                LEFT JOIN pg_sequences s
+                  ON s.schemaname = c.table_schema
+                 AND s.sequencename = pg_get_serial_sequence(c.table_name, c.column_name)::regclass::text
+                WHERE tc.table_schema = 'public' AND tc.constraint_type = 'PRIMARY KEY'
+                  AND c.table_name NOT LIKE '%\\_aud' AND c.table_name NOT LIKE 'databasechangelog%'
+                """);
+
+        assertThat(keys).hasSize(8).allSatisfy(key -> {
+            String sequence = key.get("table_name") + "_" + key.get("column_name") + "_seq";
+            assertThat(key)
+                    .containsEntry("data_type", "bigint")
+                    .containsEntry("is_identity", "NO")
+                    .containsEntry("column_default", "nextval('" + sequence + "'::regclass)")
+                    .containsEntry("sequencename", sequence)
+                    .containsEntry("increment_by", 1L);
+        });
+    }
+
     @Nested
     class Seed {
 
