@@ -98,6 +98,7 @@ Rules:
   @SequenceGenerator(name = "distribution_lists_id_seq", sequenceName = "distribution_lists_id_seq", allocationSize = 1)
   private Long id;
   ```
+- Uniqueness rules live in unique constraints/indexes only; don't check them in the use case. `saveAndFlush` and let the error handler map the unique violation to 409 `already-exists`.
 - Lists and members are soft deleted only (`active = false`). Optimistic locking uses `@Version`; a stale version returns 409.
 - Audit columns come from Spring Data auditing (`AuditorAware` = JWT `userId`, or the client id for service tokens). Envers revisions store the same user id.
 

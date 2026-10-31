@@ -4,10 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.oriolvc.notificationsservice.shared.web.RequestIdFilter;
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.List;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +44,7 @@ class ProblemDetailsExceptionHandlerTest {
 
     @Test
     void conflictsHaveDistinctTypes() {
-        assertThat(body(handler.handleProblem(new AlreadyExistsException("dup"), request))
+        assertThat(body(handler.handleDataIntegrityViolation(integrityViolation(ConstraintKind.UNIQUE), request))
                         .getType())
                 .isEqualTo(ProblemType.ALREADY_EXISTS.uri());
         assertThat(body(handler.handleProblem(new VersionConflictException("stale"), request))
@@ -50,6 +54,17 @@ class ProblemDetailsExceptionHandlerTest {
                                 new ObjectOptimisticLockingFailureException(Object.class, 1L), request))
                         .getStatus())
                 .isEqualTo(409);
+    }
+
+    @Test
+    void integrityViolationsOtherThanUniqueAreUnexpected() {
+        assertThat(body(handler.handleDataIntegrityViolation(integrityViolation(ConstraintKind.CHECK), request))
+                        .getType())
+                .isEqualTo(ProblemType.INTERNAL_ERROR.uri());
+        assertThat(body(handler.handleDataIntegrityViolation(
+                                new DataIntegrityViolationException("no Hibernate cause"), request))
+                        .getStatus())
+                .isEqualTo(500);
     }
 
     @Test
@@ -93,5 +108,12 @@ class ProblemDetailsExceptionHandlerTest {
 
     private static ProblemDetail body(ResponseEntity<Object> response) {
         return (ProblemDetail) response.getBody();
+    }
+
+    private static DataIntegrityViolationException integrityViolation(ConstraintKind kind) {
+        return new DataIntegrityViolationException(
+                "could not execute statement",
+                new ConstraintViolationException(
+                        "violation", new SQLException("violation"), kind, "uq_some_constraint"));
     }
 }

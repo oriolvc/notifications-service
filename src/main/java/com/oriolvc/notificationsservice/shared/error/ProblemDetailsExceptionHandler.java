@@ -4,9 +4,12 @@ import com.oriolvc.notificationsservice.shared.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -46,6 +49,22 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
                 "The resource was modified concurrently; read it again and retry",
                 List.of(),
                 request);
+    }
+
+    /**
+     * Uniqueness rules (one active list per customer, type and channel; unique list names; …) are enforced by the
+     * database's unique constraints, not checked beforehand: a unique violation is the 409. Any other integrity
+     * violation means the application let invalid data through, so it stays a 500.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+        if (ex.getCause() instanceof ConstraintViolationException violation
+                && violation.getKind() == ConstraintKind.UNIQUE) {
+            log.info("Unique constraint {} rejected the change", violation.getConstraintName());
+            return problem(
+                    ProblemType.ALREADY_EXISTS, "The change conflicts with an existing resource", List.of(), request);
+        }
+        return handleUnexpected(ex, request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
