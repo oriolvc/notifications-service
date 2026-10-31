@@ -79,7 +79,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** the migrations and constraint tests are green.
 
-## [ ] T3 — Shared kernel
+## [x] T3 — Shared kernel
 
 **Goal:** the cross-cutting pieces every feature PR relies on.
 

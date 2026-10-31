@@ -109,6 +109,10 @@ Adding a channel means adding a `Channel` enum value, a `ChannelSender`, an `Add
 
 Accessing a resource of another tenant returns **404**, so the response does not reveal that the resource exists.
 
+**Token validation.** Signature (JWKS; a dev key pair in the `local`/`test` profiles), `exp`, `aud`, `iss` and the service claims: a caller must have an identity (`userId`, else `client_id`, else `sub`), `tenantId` must be numeric, and tenant-scoped roles require a `tenantId`. Any failure → 401. The expected issuer is set with `notifications.security.jwt.issuer` rather than Boot's `issuer-uri`, because Boot switches to OIDC discovery when `issuer-uri` is set and ignores a configured key. Unknown roles are ignored; a token with no known role gets 403.
+
+**Authorization** is defined only in the `SecurityFilterChain`, which mirrors each operation's `x-required-roles` in the spec. A test drives every (operation × role) pair from the spec, so they cannot drift. Paths outside the spec are denied.
+
 ## 6. API
 
 **Contract-first:** an OpenAPI 3.1 spec checked into the repo is the source of the API. Server interfaces and DTOs are generated from it. Errors use `application/problem+json` (RFC 9457).
@@ -185,6 +189,20 @@ Duplicated `customerIds` are not an error: the generated DTO binds `uniqueItems`
 
 **`GET /notifications/{id}`**: notification, rendered content and per-recipient delivery status with attempts.
 **`GET /notifications?eventKey=…&customerId=…`**: search. Tenant users are always filtered to their own tenant.
+
+### 6.1.1 Errors
+
+Every error is an RFC 9457 Problem Detail (`application/problem+json`) built in one place, with `instance`, `requestId` and, for 400/422 validation errors, `violations[]` (`pointer`, `message`). Clients rely on the stable `type`, never on `title` or `detail`:
+
+| `type` (`urn:notifications-service:problem:…`) | Status |
+|---|---|
+| `malformed-request` | 400 |
+| `unauthorized` / `forbidden` | 401 / 403 (also for the security layer, with `WWW-Authenticate`) |
+| `not-found` | 404 (also another tenant's resource) |
+| `version-conflict` / `already-exists` | 409 |
+| `unsupported-media-type` | 415 |
+| `unprocessable-content` | 422 |
+| `internal-error` | 500 (no internal details) |
 
 ### 6.2 Distribution lists (tenant from JWT)
 
@@ -449,7 +467,7 @@ All tables, including the Envers ones, are created by Liquibase (no `ddl-auto`).
 | Event received, per customer | `notifications` (event key, parameters, outcome, `created_by`) |
 | Successful communication (recipient, timestamp, event reference, status) | `notification_deliveries` (`SENT`, `sent_at`, `address`, `body`) + `delivery_attempts` |
 | Every error | `delivery_attempts` (one row per failed attempt) + `NO_RECIPIENTS` notifications |
-| Request tracing | Structured logs with correlation id (`traceparent`). PII is masked. |
+| Request tracing | `X-Request-Id` (caller's if well formed, else generated) in the MDC, every log line, the response header and every Problem Detail. Logs carry ids only, no PII. |
 
 **Production hardening (not in the exercise):** grant the application DB user only `INSERT, SELECT` on `notifications`, `delivery_attempts` and the `_aud` tables, so the audit trail is append-only.
 
@@ -462,7 +480,7 @@ All tables, including the Envers ones, are created by Liquibase (no `ddl-auto`).
 | **Repudiation** | "We never received it" / "I didn't change that list" | Envers with user id; per-attempt records with `provider_message_id`; stored rendered content; `created_by` everywhere |
 | **Information disclosure** | **Highest risk:** a customer's supplier-compliance alert goes to another customer; recipients see each other's addresses; PII in logs | Tenant from JWT, never from the request, for user endpoints; cross-tenant access → 404; recipients resolved only from the customer's own list; one email per recipient; PII masking in logs; SMTP credentials in a secret store |
 | **Denial of service** | Request floods; using the service to mail-bomb | Gateway rate limiting; ≤100 customers per request; ≤100 members per list; request size limit; retry cap with backoff |
-| **Elevation of privilege** | Customer user publishes notifications or edits another tenant's list (IDOR) | Role checks (`@PreAuthorize`) per endpoint; every list/member query scoped by `customer_id`; tests for cross-tenant access |
+| **Elevation of privilege** | Customer user publishes notifications or edits another tenant's list (IDOR) | Role rules per endpoint in the `SecurityFilterChain`, tested against the spec's `x-required-roles`; every list/member query scoped by `customer_id`; tests for cross-tenant access |
 
 ## 13. Metrics
 

@@ -17,6 +17,7 @@
         <java.version>25</java.version>
         <jacoco.version>0.8.16</jacoco.version>
         <jacoco.line-coverage.minimum>0.90</jacoco.line-coverage.minimum>
+        <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
         <openapi-generator.version>7.26.0</openapi-generator.version>
         <spotless.version>3.10.4</spotless.version>
         <palantir-java-format.version>2.103.0</palantir-java-format.version>
@@ -36,7 +37,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-envers</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -81,6 +86,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.oai</groupId>
+            <artifactId>openapi-request-validator-mockmvc</artifactId>
+            <version>${openapi-request-validator.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -141,6 +152,8 @@
                                 <useJackson3>true</useJackson3>
                                 <useTags>true</useTags>
                                 <useBeanValidation>true</useBeanValidation>
+                                <!-- no class-level @Validated: Spring MVC validates parameters and raises HandlerMethodValidationException -->
+                                <useSpringBuiltInValidation>true</useSpringBuiltInValidation>
                                 <openApiNullable>false</openApiNullable>
                                 <annotationLibrary>none</annotationLibrary>
                                 <documentationProvider>none</documentationProvider>

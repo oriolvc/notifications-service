@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +20,6 @@ class DatabaseSchemaIntegrationTest extends IntegrationTest {
 
     private static final String TYPE_ID =
             "(SELECT id FROM notification_types WHERE code = 'REGULATORY_DOCUMENT_MATCHED')";
-
-    @Autowired
-    private JdbcTemplate jdbc;
 
     @Test
     void createsAllTables() {

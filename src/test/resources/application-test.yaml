@@ -1,0 +1,13 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Same dev key pair as the local profile; JwtTokens signs with the private key
+          public-key-location: classpath:keys/local-jwt-public.pem
+          audiences: notifications-service
+
+notifications:
+  security:
+    jwt:
+      issuer: http://localhost/local-issuer

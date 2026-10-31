@@ -9,8 +9,17 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      org.hibernate.envers.audit_table_suffix: _aud
+  # JWT validation (A-2): signature, expiry, issuer, audience and our claims. Deployments set
+  # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI, ..._JWT_AUDIENCES and NOTIFICATIONS_SECURITY_JWT_ISSUER.
+  # The local and test profiles use a dev key pair instead (keys/local-jwt-public.pem).
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] "
 
 management:
   endpoints:

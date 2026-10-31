@@ -87,6 +87,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
         '422':
           $ref: '#/components/responses/UnprocessableContent'
     get:
@@ -185,6 +187,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -264,6 +268,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -325,6 +331,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -450,6 +458,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    UnsupportedMediaType:
+      description: The request body is not `application/json`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     UnprocessableContent:
       description: |
         The request is well formed but semantically invalid: unknown or inactive notification
@@ -530,7 +544,9 @@ components:
       properties:
         pointer:
           type: string
-          description: JSON Pointer (RFC 6901) to the offending value in the request, e.g. `/parameters/confidence`.
+          description: |
+            JSON Pointer (RFC 6901) to the offending value in the request body, e.g. `/parameters/confidence`,
+            or the name of the offending path or query parameter, e.g. `listId`.
         message:
           type: string
 

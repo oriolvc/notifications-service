@@ -28,6 +28,8 @@ Spring Boot 4 is newer than most training data:
 ./mvnw spotless:apply              # format (palantir-java-format)
 ./mvnw test -Dtest=ClassName       # single test class
 docker compose up -d               # local postgres:18 (5432) + Mailpit (SMTP 1025, UI http://localhost:8025)
+./mvnw -q test-compile exec:java -Dexec.classpathScope=test -Dexec.mainClass=com.oriolvc.notificationsservice.LocalTokens
+                                   # print 12 h dev tokens per role for the local profile
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
@@ -120,11 +122,11 @@ Rules:
   - Testcontainers `postgres:18` (singleton, `@ServiceConnection`)
   - GreenMail
   - MockMvc
-  - JWT helpers per role
-  - validation of requests and responses against the OpenAPI spec
+  - JWT helpers per role (`JwtTokens`: real tokens signed with the dev key, so the decoder and claim mapping are exercised)
+  - validation of every exchange against the OpenAPI spec (`OpenApiContractMatcher`): responses always; requests unless the server rejected them with a 4xx; 501 stubs skipped. An undocumented status or body fails the test, so fix the spec or the code, never the matcher
 
   Exercise the HTTP API end to end.
-- **Fixtures:** `src/test/resources/fixtures/*.sql` loaded with `@Sql`. Each test starts from a clean DB (the base class truncates); never depend on test order.
+- **Fixtures:** `src/test/resources/fixtures/*.sql` loaded with `@Sql`. Each test starts from a clean DB (`CleanDatabaseTestExecutionListener` truncates everything but the Liquibase seed, before `@Sql` runs); never depend on test order.
 - Tests that prove an acceptance criterion carry its id: `@DisplayName("AC-5 same event posted twice is reported as duplicate")`.
 - **Coverage:** JaCoCo line coverage ≥ 90 % is enforced in `verify`; generated code and the `Application` class are excluded. Test behaviour, not getters.
 

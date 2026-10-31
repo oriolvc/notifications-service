@@ -4,3 +4,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/notifications
     username: notifications
     password: notifications
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Dev key pair: tokens come from LocalTokens (test scope), see README
+          public-key-location: classpath:keys/local-jwt-public.pem
+          audiences: notifications-service
+
+notifications:
+  security:
+    jwt:
+      issuer: http://localhost/local-issuer
