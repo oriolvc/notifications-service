@@ -223,6 +223,15 @@ List names are trimmed and unique per tenant (exact match, inactive lists includ
 
 There is no member PATCH: changing an address is a remove plus an add. This keeps the audit trail unambiguous.
 Limit: 100 active members per list. Adding a member beyond it → 422 (a business rule, not a conflict with another resource).
+
+Members belong to the list aggregate, which enforces these rules:
+- The address is trimmed, then checked by the `AddressValidator` of the list's channel. An invalid address → 400 `malformed-request` with a violation on `/address`; the address is not echoed. For EMAIL the rule is a pragmatic subset of RFC 5321/5322: a dot-atom local part of at most 64 characters, a domain with at least two labels and an alphabetic TLD, 254 characters in total. Quoted local parts and IP-literal domains are rejected.
+- Addresses are unique per list ignoring case (also enforced by `uq_distribution_list_members_list_address`). Re-adding a removed address reactivates the same member (same id, still counted against the limit); an active one → 409 `already-exists`.
+- Removing a member is idempotent; a member of another list → 404.
+- Any member change bumps the list's `version`: the aggregate is versioned as a whole, so two concurrent member changes cannot both pass the limit check (the second gets 409 `version-conflict`).
+- Members can be managed on an inactive list; only active lists receive notifications.
+
+Recipients for a notification are the active members of the customer's active lists for the type, one list per channel (`ActiveRecipientsQuery` in the Distribution application layer, read through `RecipientResolver`).
 Reactivating a list (`PATCH active=true`) while another active list exists for the same (type, channel) → 409.
 
 ### 6.3 Parameter schemas: single source of truth

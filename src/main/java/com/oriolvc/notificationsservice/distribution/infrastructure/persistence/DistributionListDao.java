@@ -10,4 +10,8 @@ interface DistributionListDao extends JpaRepository<DistributionListDbo, Long> {
     Optional<DistributionListDbo> findByIdAndCustomerId(long id, long customerId);
 
     List<DistributionListDbo> findAllByCustomerIdOrderByIdAsc(long customerId);
+
+    /** At most one per channel (A-13). */
+    List<DistributionListDbo> findAllByCustomerIdAndNotificationTypeIdAndActiveTrue(
+            long customerId, long notificationTypeId);
 }

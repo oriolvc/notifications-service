@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
@@ -246,37 +245,5 @@ class DistributionListsIntegrationTest extends IntegrationTest {
 
     private Map<String, Object> listRow(final long id) {
         return jdbc.queryForMap("SELECT name, active, version FROM distribution_lists WHERE id = ?", id);
-    }
-
-    private MvcTestResult get(final String uri, final String token) {
-        return mvc.get()
-                .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, bearer(token))
-                .exchange();
-    }
-
-    private MvcTestResult post(final String uri, final String token, final String body) {
-        return mvc.post()
-                .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, bearer(token))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
-                .exchange();
-    }
-
-    private MvcTestResult patch(final String uri, final String token, final String body) {
-        return mvc.patch()
-                .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, bearer(token))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
-                .exchange();
-    }
-
-    private MvcTestResult delete(final String uri, final String token) {
-        return mvc.delete()
-                .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, bearer(token))
-                .exchange();
     }
 }

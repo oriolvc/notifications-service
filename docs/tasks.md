@@ -116,7 +116,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** **AC-18** (cross-tenant → 404), **AC-20** (stale version → 409) and **AC-21** (second active list → 409) pass, and each change creates an Envers revision with the user id (lists part of **AC-3**).
 
-## [ ] T5 — Members
+## [x] T5 — Members
 
 **Goal:** manage members of a list. RFC §6.2, A-5, D-4.
 

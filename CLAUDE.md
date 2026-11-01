@@ -133,7 +133,7 @@ Rules:
 - **Integration:** classes named `*IntegrationTest`, extending the `IntegrationTest` base, which provides:
   - Testcontainers `postgres:18` (singleton, `@ServiceConnection`)
   - GreenMail
-  - MockMvc
+  - MockMvc, with `get`/`post`/`patch`/`delete` helpers that send a bearer token and `assertProblem(result, status, type)`
   - JWT helpers per role (`JwtTokens`: real tokens signed with the dev key, so the decoder and claim mapping are exercised)
   - validation of every exchange against the OpenAPI spec (`OpenApiContractMatcher`): responses always; requests unless the server rejected them with a 4xx; 501 stubs skipped. An undocumented status or body fails the test, so fix the spec or the code, never the matcher
 

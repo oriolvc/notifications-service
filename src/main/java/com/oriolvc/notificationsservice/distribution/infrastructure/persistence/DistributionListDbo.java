@@ -2,6 +2,7 @@ package com.oriolvc.notificationsservice.distribution.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.shared.auditing.AuditedDbo;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,9 +10,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.util.ArrayList;
+import java.util.List;
 import org.hibernate.envers.Audited;
 
 /** Row of {@code distribution_lists}; Envers keeps its history in {@code distribution_lists_aud}. */
@@ -48,6 +53,11 @@ class DistributionListDbo extends AuditedDbo {
     @Version
     @Column(name = "version", nullable = false)
     private long version;
+
+    /** New members are persisted with the list when it is flushed. */
+    @OneToMany(mappedBy = "distributionList", cascade = CascadeType.PERSIST)
+    @OrderBy("id")
+    private List<MemberDbo> members = new ArrayList<>();
 
     Long getId() {
         return id;
@@ -95,5 +105,9 @@ class DistributionListDbo extends AuditedDbo {
 
     long getVersion() {
         return version;
+    }
+
+    List<MemberDbo> getMembers() {
+        return members;
     }
 }
