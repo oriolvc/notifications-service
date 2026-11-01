@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.distribution.application;
+package com.oriolvc.notificationsservice.distribution.application.model;
 
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 

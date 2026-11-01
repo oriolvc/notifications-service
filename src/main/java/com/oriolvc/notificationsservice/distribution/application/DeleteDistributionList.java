@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.model.DeleteDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;

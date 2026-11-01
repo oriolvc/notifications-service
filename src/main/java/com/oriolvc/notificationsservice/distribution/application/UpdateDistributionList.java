@@ -1,5 +1,7 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
+import com.oriolvc.notificationsservice.distribution.application.model.UpdateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;

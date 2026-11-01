@@ -1,16 +1,16 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.web;
 
 import com.oriolvc.notificationsservice.distribution.application.CreateDistributionList;
-import com.oriolvc.notificationsservice.distribution.application.CreateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.application.DeleteDistributionList;
-import com.oriolvc.notificationsservice.distribution.application.DeleteDistributionListCommand;
-import com.oriolvc.notificationsservice.distribution.application.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.application.GetDistributionList;
-import com.oriolvc.notificationsservice.distribution.application.GetDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.application.ListDistributionLists;
-import com.oriolvc.notificationsservice.distribution.application.ListDistributionListsCommand;
 import com.oriolvc.notificationsservice.distribution.application.UpdateDistributionList;
-import com.oriolvc.notificationsservice.distribution.application.UpdateDistributionListCommand;
+import com.oriolvc.notificationsservice.distribution.application.model.CreateDistributionListCommand;
+import com.oriolvc.notificationsservice.distribution.application.model.DeleteDistributionListCommand;
+import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
+import com.oriolvc.notificationsservice.distribution.application.model.GetDistributionListCommand;
+import com.oriolvc.notificationsservice.distribution.application.model.ListDistributionListsCommand;
+import com.oriolvc.notificationsservice.distribution.application.model.UpdateDistributionListCommand;
 import com.oriolvc.notificationsservice.generated.api.DistributionListsApi;
 import com.oriolvc.notificationsservice.generated.model.CreateDistributionListRequest;
 import com.oriolvc.notificationsservice.generated.model.DistributionList;

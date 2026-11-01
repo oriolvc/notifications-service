@@ -1,8 +1,9 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.notification.application.NotificationTypeQuery;
-import com.oriolvc.notificationsservice.notification.application.NotificationTypeRef;
+import com.oriolvc.notificationsservice.notification.application.model.NotificationTypeRef;
 import org.springframework.stereotype.Component;
 
 /** Builds views, resolving the notification type code through the notification context. */
@@ -21,6 +22,16 @@ class DistributionListViews {
                 .map(NotificationTypeRef::code)
                 .orElseThrow(() -> new IllegalStateException(
                         "Distribution list " + distributionList.id() + " references a missing notification type"));
-        return DistributionListView.of(distributionList, code);
+        return new DistributionListView(
+                distributionList.id(),
+                distributionList.name(),
+                code,
+                distributionList.channel(),
+                distributionList.isActive(),
+                distributionList.version(),
+                distributionList.audit().createdAt(),
+                distributionList.audit().createdBy(),
+                distributionList.audit().updatedAt(),
+                distributionList.audit().updatedBy());
     }
 }

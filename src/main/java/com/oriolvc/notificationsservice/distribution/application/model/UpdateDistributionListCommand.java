@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.distribution.application;
+package com.oriolvc.notificationsservice.distribution.application.model;
 
 /**
  * @param name new name, or {@code null} to keep it

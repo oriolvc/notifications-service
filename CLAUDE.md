@@ -43,7 +43,8 @@ Single deployable, hexagonal, two bounded contexts plus a small shared kernel.
 com.oriolvc.notificationsservice
 ├── distribution/              who receives what: distribution lists and members
 │   ├── domain/                aggregates, value objects, repository interfaces
-│   ├── application/           use cases, commands, query services
+│   ├── application/           use cases, query services
+│   │   └── model/             commands, views and other records the use cases take or return
 │   └── infrastructure/
 │       ├── web/               controllers implementing generated API interfaces + DTO mappers
 │       └── persistence/       DBOs, DAOs and the domain repository implementations
@@ -69,7 +70,7 @@ Rules:
   - `JpaXxxRepository`: implements the domain repository interface by calling the DAO and mapping. On save it loads the current row, checks the version the aggregate was read at, copies the state onto it and `saveAndFlush`es; it returns the aggregate as stored (id, version, `AuditMetadata`).
   Aggregates are rebuilt with a `restore(...)` factory, which skips the validation of `create(...)`.
 - Aggregates protect their invariants: no public setters, static factories, intention-revealing methods (`deactivate()`, `addMember(...)`).
-- **Use cases:** one class per use case, a single public method `execute(Command)`. Commands and results are records. No `@Transactional` in `application`.
+- **Use cases:** one class per use case, a single public method `execute(Command)`. Commands and results are records in `application/model`, apart from the use cases. No `@Transactional` in `application`.
 - **Transactions belong to the repository adapters** (`Jpa…Repository`): `@Transactional(readOnly = true)` on the class, `@Transactional` on the writes. A use case's read and its later save run in separate transactions, which is safe because `save` checks the version the aggregate was read at. Data that must be written atomically is saved by one repository call.
 - Generated OpenAPI code (DTOs, interfaces) never leaks past `infrastructure/web`.
 

@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.application;
 
+import com.oriolvc.notificationsservice.notification.application.model.NotificationTypeRef;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
 import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import java.util.Optional;

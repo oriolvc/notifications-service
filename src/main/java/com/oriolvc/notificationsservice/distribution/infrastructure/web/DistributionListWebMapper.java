@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.web;
 
-import com.oriolvc.notificationsservice.distribution.application.DistributionListView;
+import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.generated.model.Channel;
 import com.oriolvc.notificationsservice.generated.model.DistributionList;
 import java.time.Instant;
