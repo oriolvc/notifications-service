@@ -311,6 +311,8 @@ The unique constraint, not a prior `SELECT`, is what guarantees deduplication un
 
 `additionalProperties: false` matters for the event key: unknown fields cannot change the hash.
 
+Validation uses networknt json-schema-validator **2.x** with format assertions on (an invalid `date` is a violation, not an annotation). 2.x rather than 3.x because the contract tests' validator depends on 2.x and the two cannot coexist; 2.x runs on Jackson 2, which springdoc already brings, so schemas and parameters are handed over as JSON text. Each violation has a JSON pointer relative to the parameters (`/confidence`; `/siteName` for a missing one, `/unexpected` for an unknown one). The failed branches of a `oneOf` are folded into one violation, and a `oneOf` of `const`s is reported as the list of allowed values (`must be one of "WARNING_LETTER", "OAI", "NON_COMPLIANCE_REPORT"`).
+
 ### 7.3 Event key (deduplication)
 
 ```
@@ -327,7 +329,7 @@ eventKey = hex( SHA-256( typeCode + "\n" + canonicalJson(normalizedParameters) )
 ## 8. Templates and rendering
 
 - One template per **(notification type, channel)**. `subject` is required for EMAIL and null for channels without one.
-- Placeholder syntax `{{name}}`, implemented with a minimal renderer (no logic, no includes).
+- Placeholder syntax `{{name}}` for top-level parameters (letters, digits and `_`, no spaces), implemented with a minimal renderer (no logic, no includes). A missing optional parameter renders as empty.
 - **Formatting is driven by the schema**, so new types need no code:
   - `format: date` → `d MMMM yyyy`, `Locale.ENGLISH` (`2026-06-12` → `12 June 2026`)
   - `oneOf` with `const`/`title` → the `title` (`WARNING_LETTER` → `warning letter`)

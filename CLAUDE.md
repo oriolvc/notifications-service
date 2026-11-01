@@ -63,7 +63,7 @@ com.oriolvc.notificationsservice
 Rules:
 - Dependencies point inward: `infrastructure → application → domain`.
 - `notification` reaches `distribution` **only** through the `RecipientResolver` port. Never import `distribution.domain` or its repositories from `notification`. The reverse direction (validating a notification type code) goes through a query service in `notification.application`.
-- **Separate persistence model:** `domain` is plain Java, with no JPA, Envers or Spring Data annotations. Per aggregate, `infrastructure/persistence` holds (all package-private):
+- **Separate persistence model:** `domain` is plain Java, with no JPA, Envers or Spring Data annotations. Jackson 3 `JsonNode` is allowed there for JSON-shaped values (parameters, schemas). Per aggregate, `infrastructure/persistence` holds (all package-private):
   - `XxxDbo`: the `@Entity` (`@Audited`, `@Version`, audit columns via `AuditedDbo`)
   - `XxxDao`: the Spring Data interface over the DBO; it runs the queries
   - `XxxDboMapper`: domain ↔ DBO

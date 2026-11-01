@@ -2,6 +2,7 @@ package com.oriolvc.notificationsservice.notification.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
 import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,5 +25,12 @@ class JpaNotificationTypeRepository implements NotificationTypeRepository {
     @Override
     public Optional<NotificationType> findById(final long id) {
         return dao.findById(id).map(NotificationTypeDboMapper::toDomain);
+    }
+
+    @Override
+    public List<NotificationType> findAll() {
+        return dao.findAllByOrderByIdAsc().stream()
+                .map(NotificationTypeDboMapper::toDomain)
+                .toList();
     }
 }

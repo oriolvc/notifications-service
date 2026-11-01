@@ -130,7 +130,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** **AC-3** is complete and **AC-19** passes (invalid email → 400, duplicate → 409).
 
-## [ ] T6 — Notification domain
+## [x] T6 — Notification domain
 
 **Goal:** the pure logic of turning parameters into an event key and a rendered message. Mostly unit tests, no endpoints. RFC §7.2, §7.3, §8.
 
