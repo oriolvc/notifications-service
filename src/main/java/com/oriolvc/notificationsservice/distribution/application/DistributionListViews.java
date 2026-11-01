@@ -15,12 +15,12 @@ class DistributionListViews {
         this.notificationTypes = notificationTypes;
     }
 
-    DistributionListView of(DistributionList list) {
+    DistributionListView of(DistributionList distributionList) {
         String code = notificationTypes
-                .findById(list.notificationTypeId())
+                .findById(distributionList.notificationTypeId())
                 .map(NotificationTypeRef::code)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Distribution list " + list.id() + " references a missing notification type"));
-        return DistributionListView.of(list, code);
+                        "Distribution list " + distributionList.id() + " references a missing notification type"));
+        return DistributionListView.of(distributionList, code);
     }
 }

@@ -16,17 +16,17 @@ public record DistributionListView(
         Instant updatedAt,
         String updatedBy) {
 
-    static DistributionListView of(DistributionList list, String notificationTypeCode) {
+    static DistributionListView of(DistributionList distributionList, String notificationTypeCode) {
         return new DistributionListView(
-                list.id(),
-                list.name(),
+                distributionList.id(),
+                distributionList.name(),
                 notificationTypeCode,
-                list.channel(),
-                list.isActive(),
-                list.version(),
-                list.audit().createdAt(),
-                list.audit().createdBy(),
-                list.audit().updatedAt(),
-                list.audit().updatedBy());
+                distributionList.channel(),
+                distributionList.isActive(),
+                distributionList.version(),
+                distributionList.audit().createdAt(),
+                distributionList.audit().createdBy(),
+                distributionList.audit().updatedAt(),
+                distributionList.audit().updatedBy());
     }
 }

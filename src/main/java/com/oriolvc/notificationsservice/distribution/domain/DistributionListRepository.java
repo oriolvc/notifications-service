@@ -11,7 +11,7 @@ public interface DistributionListRepository {
      * unique-constraint violation surfaces as a {@code DataIntegrityViolationException} (409) and a list changed since
      * it was read as an {@code ObjectOptimisticLockingFailureException} (409).
      */
-    DistributionList save(DistributionList list);
+    DistributionList save(DistributionList distributionList);
 
     Optional<DistributionList> findByIdAndCustomerId(long id, long customerId);
 

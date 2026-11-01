@@ -9,18 +9,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeleteDistributionList {
 
-    private final DistributionListRepository lists;
+    private final DistributionListRepository distributionListRepository;
 
-    DeleteDistributionList(DistributionListRepository lists) {
-        this.lists = lists;
+    DeleteDistributionList(DistributionListRepository distributionListRepository) {
+        this.distributionListRepository = distributionListRepository;
     }
 
     public void execute(DeleteDistributionListCommand command) {
-        DistributionList list = lists.findByIdAndCustomerId(command.listId(), command.tenantId())
+        DistributionList distributionList = distributionListRepository
+                .findByIdAndCustomerId(command.listId(), command.tenantId())
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));
-        if (list.isActive()) {
-            list.deactivate();
-            lists.save(list);
+        if (distributionList.isActive()) {
+            distributionList.deactivate();
+            distributionListRepository.save(distributionList);
         }
     }
 }

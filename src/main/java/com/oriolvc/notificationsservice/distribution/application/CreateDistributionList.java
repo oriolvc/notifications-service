@@ -12,13 +12,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class CreateDistributionList {
 
-    private final DistributionListRepository lists;
+    private final DistributionListRepository distributionListRepository;
     private final NotificationTypeQuery notificationTypes;
     private final DistributionListViews views;
 
     CreateDistributionList(
-            DistributionListRepository lists, NotificationTypeQuery notificationTypes, DistributionListViews views) {
-        this.lists = lists;
+            DistributionListRepository distributionListRepository,
+            NotificationTypeQuery notificationTypes,
+            DistributionListViews views) {
+        this.distributionListRepository = distributionListRepository;
         this.notificationTypes = notificationTypes;
         this.views = views;
     }
@@ -30,8 +32,8 @@ public class CreateDistributionList {
                         "Unknown or inactive notification type",
                         List.of(new Violation("/notificationType", "unknown or inactive notification type"))));
         // Duplicate names and a second active list are rejected by the unique constraints (409)
-        DistributionList list = DistributionList.create(
+        DistributionList distributionList = DistributionList.create(
                 command.tenantId(), DistributionList.normalizeName(command.name()), type.id(), command.channel());
-        return views.of(lists.save(list));
+        return views.of(distributionListRepository.save(distributionList));
     }
 }

@@ -11,14 +11,14 @@ class DistributionListTest {
 
     @Test
     void createsAnActiveListWithATrimmedName() {
-        DistributionList list = DistributionList.create(101, "  Compliance  ", 1, Channel.EMAIL);
+        DistributionList distributionList = DistributionList.create(101, "  Compliance  ", 1, Channel.EMAIL);
 
-        assertThat(list.isActive()).isTrue();
-        assertThat(list.name()).isEqualTo("Compliance");
-        assertThat(list.customerId()).isEqualTo(101);
-        assertThat(list.notificationTypeId()).isEqualTo(1);
-        assertThat(list.channel()).isEqualTo(Channel.EMAIL);
-        assertThat(list.version()).isZero();
+        assertThat(distributionList.isActive()).isTrue();
+        assertThat(distributionList.name()).isEqualTo("Compliance");
+        assertThat(distributionList.customerId()).isEqualTo(101);
+        assertThat(distributionList.notificationTypeId()).isEqualTo(1);
+        assertThat(distributionList.channel()).isEqualTo(Channel.EMAIL);
+        assertThat(distributionList.version()).isZero();
     }
 
     @Test
@@ -33,22 +33,22 @@ class DistributionListTest {
 
     @Test
     void renamesDeactivatesAndReactivates() {
-        DistributionList list = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
+        DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
 
-        list.rename(" QA ");
-        list.deactivate();
-        assertThat(list.name()).isEqualTo("QA");
-        assertThat(list.isActive()).isFalse();
+        distributionList.rename(" QA ");
+        distributionList.deactivate();
+        assertThat(distributionList.name()).isEqualTo("QA");
+        assertThat(distributionList.isActive()).isFalse();
 
-        list.activate();
-        assertThat(list.isActive()).isTrue();
+        distributionList.activate();
+        assertThat(distributionList.isActive()).isTrue();
     }
 
     @Test
     void staleVersionIsRejected() {
-        DistributionList list = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
+        DistributionList distributionList = DistributionList.create(101, "Compliance", 1, Channel.EMAIL);
 
-        list.checkVersion(0);
-        assertThatThrownBy(() -> list.checkVersion(3)).isInstanceOf(VersionConflictException.class);
+        distributionList.checkVersion(0);
+        assertThatThrownBy(() -> distributionList.checkVersion(3)).isInstanceOf(VersionConflictException.class);
     }
 }

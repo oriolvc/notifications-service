@@ -21,9 +21,10 @@ class JpaDistributionListRepository implements DistributionListRepository {
 
     @Override
     @Transactional
-    public DistributionList save(DistributionList list) {
-        DistributionListDbo dbo = list.id() == null ? new DistributionListDbo() : currentRow(list);
-        DistributionListDboMapper.copy(list, dbo);
+    public DistributionList save(DistributionList distributionList) {
+        DistributionListDbo dbo =
+                distributionList.id() == null ? new DistributionListDbo() : currentRow(distributionList);
+        DistributionListDboMapper.copy(distributionList, dbo);
         return DistributionListDboMapper.toDomain(dao.saveAndFlush(dbo));
     }
 
@@ -43,9 +44,10 @@ class JpaDistributionListRepository implements DistributionListRepository {
      * The row the list was read from (usually already in the persistence context). Its version must still be the one
      * the domain object was read at; Hibernate then checks it again in the {@code UPDATE}.
      */
-    private DistributionListDbo currentRow(DistributionList list) {
-        return dao.findById(list.id())
-                .filter(dbo -> dbo.getVersion() == list.version())
-                .orElseThrow(() -> new ObjectOptimisticLockingFailureException(DistributionListDbo.class, list.id()));
+    private DistributionListDbo currentRow(DistributionList distributionList) {
+        return dao.findById(distributionList.id())
+                .filter(dbo -> dbo.getVersion() == distributionList.version())
+                .orElseThrow(() ->
+                        new ObjectOptimisticLockingFailureException(DistributionListDbo.class, distributionList.id()));
     }
 }

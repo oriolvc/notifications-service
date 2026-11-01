@@ -7,16 +7,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class GetDistributionList {
 
-    private final DistributionListRepository lists;
+    private final DistributionListRepository distributionListRepository;
     private final DistributionListViews views;
 
-    GetDistributionList(DistributionListRepository lists, DistributionListViews views) {
-        this.lists = lists;
+    GetDistributionList(DistributionListRepository distributionListRepository, DistributionListViews views) {
+        this.distributionListRepository = distributionListRepository;
         this.views = views;
     }
 
     public DistributionListView execute(GetDistributionListCommand command) {
-        return lists.findByIdAndCustomerId(command.listId(), command.tenantId())
+        return distributionListRepository
+                .findByIdAndCustomerId(command.listId(), command.tenantId())
                 .map(views::of)
                 .orElseThrow(() -> new DistributionListNotFoundException(command.listId()));
     }

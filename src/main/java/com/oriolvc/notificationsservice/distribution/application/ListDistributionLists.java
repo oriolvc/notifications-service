@@ -7,17 +7,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class ListDistributionLists {
 
-    private final DistributionListRepository lists;
+    private final DistributionListRepository distributionListRepository;
     private final DistributionListViews views;
 
-    ListDistributionLists(DistributionListRepository lists, DistributionListViews views) {
-        this.lists = lists;
+    ListDistributionLists(DistributionListRepository distributionListRepository, DistributionListViews views) {
+        this.distributionListRepository = distributionListRepository;
         this.views = views;
     }
 
     /** All lists of the tenant, active and inactive, oldest first. */
     public List<DistributionListView> execute(ListDistributionListsCommand command) {
-        return lists.findAllByCustomerIdOrderByIdAsc(command.tenantId()).stream()
+        return distributionListRepository.findAllByCustomerIdOrderByIdAsc(command.tenantId()).stream()
                 .map(views::of)
                 .toList();
     }

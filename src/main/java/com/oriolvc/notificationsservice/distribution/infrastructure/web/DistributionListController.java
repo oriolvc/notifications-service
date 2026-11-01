@@ -74,8 +74,9 @@ class DistributionListController implements DistributionListsApi {
 
     @Override
     public ResponseEntity<DistributionList> getDistributionList(Long listId) {
-        DistributionListView list = getDistributionList.execute(new GetDistributionListCommand(tenantId(), listId));
-        return ResponseEntity.ok(DistributionListWebMapper.toDto(list));
+        DistributionListView distributionList =
+                getDistributionList.execute(new GetDistributionListCommand(tenantId(), listId));
+        return ResponseEntity.ok(DistributionListWebMapper.toDto(distributionList));
     }
 
     @Override

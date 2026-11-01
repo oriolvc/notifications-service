@@ -19,11 +19,11 @@ final class DistributionListDboMapper {
     }
 
     /** Copies the domain state onto the row; id, version and audit columns are managed by JPA. */
-    static void copy(DistributionList list, DistributionListDbo dbo) {
-        dbo.setCustomerId(list.customerId());
-        dbo.setName(list.name());
-        dbo.setNotificationTypeId(list.notificationTypeId());
-        dbo.setChannel(list.channel());
-        dbo.setActive(list.isActive());
+    static void copy(DistributionList distributionList, DistributionListDbo dbo) {
+        dbo.setCustomerId(distributionList.customerId());
+        dbo.setName(distributionList.name());
+        dbo.setNotificationTypeId(distributionList.notificationTypeId());
+        dbo.setChannel(distributionList.channel());
+        dbo.setActive(distributionList.isActive());
     }
 }

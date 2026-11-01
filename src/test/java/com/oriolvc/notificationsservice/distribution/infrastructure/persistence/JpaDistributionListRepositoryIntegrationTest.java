@@ -15,7 +15,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Autowired
-    private DistributionListRepository lists;
+    private DistributionListRepository distributionListRepository;
 
     private long typeId() {
         return jdbc.queryForObject(
@@ -24,7 +24,8 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Test
     void savesANewListAndReadsItBack() {
-        DistributionList saved = lists.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
+        DistributionList saved =
+                distributionListRepository.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
 
         assertThat(saved.id()).isNotNull();
         assertThat(saved.version()).isZero();
@@ -33,25 +34,27 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
                 .isNotNull()
                 .isEqualTo(saved.audit().updatedAt());
 
-        assertThat(lists.findByIdAndCustomerId(saved.id(), 101))
+        assertThat(distributionListRepository.findByIdAndCustomerId(saved.id(), 101))
                 .get()
                 .usingRecursiveComparison()
                 .isEqualTo(saved);
-        assertThat(lists.findByIdAndCustomerId(saved.id(), 102)).isEmpty();
+        assertThat(distributionListRepository.findByIdAndCustomerId(saved.id(), 102))
+                .isEmpty();
     }
 
     @Test
     void savingAChangeBumpsTheVersion() {
-        DistributionList list = lists.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
+        DistributionList distributionList =
+                distributionListRepository.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL));
 
-        list.rename("QA");
-        list.deactivate();
-        DistributionList updated = lists.save(list);
+        distributionList.rename("QA");
+        distributionList.deactivate();
+        DistributionList updated = distributionListRepository.save(distributionList);
 
         assertThat(updated.version()).isOne();
         assertThat(updated.name()).isEqualTo("QA");
         assertThat(updated.isActive()).isFalse();
-        assertThat(lists.findAllByCustomerIdOrderByIdAsc(101))
+        assertThat(distributionListRepository.findAllByCustomerIdOrderByIdAsc(101))
                 .singleElement()
                 .usingRecursiveComparison()
                 .isEqualTo(updated);
@@ -59,16 +62,24 @@ class JpaDistributionListRepositoryIntegrationTest extends IntegrationTest {
 
     @Test
     void savingACopyReadBeforeAnotherChangeIsRejected() {
-        long id = lists.save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL))
+        long id = distributionListRepository
+                .save(DistributionList.create(101, "Compliance", typeId(), Channel.EMAIL))
                 .id();
-        DistributionList first = lists.findByIdAndCustomerId(id, 101).orElseThrow();
-        DistributionList second = lists.findByIdAndCustomerId(id, 101).orElseThrow();
+        DistributionList first =
+                distributionListRepository.findByIdAndCustomerId(id, 101).orElseThrow();
+        DistributionList second =
+                distributionListRepository.findByIdAndCustomerId(id, 101).orElseThrow();
 
         first.rename("First");
-        lists.save(first);
+        distributionListRepository.save(first);
         second.rename("Second");
 
-        assertThatThrownBy(() -> lists.save(second)).isInstanceOf(ObjectOptimisticLockingFailureException.class);
-        assertThat(lists.findByIdAndCustomerId(id, 101).orElseThrow().name()).isEqualTo("First");
+        assertThatThrownBy(() -> distributionListRepository.save(second))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+        assertThat(distributionListRepository
+                        .findByIdAndCustomerId(id, 101)
+                        .orElseThrow()
+                        .name())
+                .isEqualTo("First");
     }
 }
