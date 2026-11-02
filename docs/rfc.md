@@ -59,7 +59,7 @@ This RFC describes a new **notification service** that:
 ```
  Detection process                     Notification service                              SMTP
  ────────────────                      ─────────────────────────────────────────         ────
- POST /notifications ───────────────▶  1. validate params (JSON Schema of type)
+ POST /notifications ───────────────▶  1. normalize + validate params (JSON Schema of type)
  {type, customerIds, parameters}       2. eventKey = SHA-256(type + canonical params)
                                        3. per customer: skip if already notified
                                        4. resolve active list + members
@@ -262,7 +262,7 @@ The PostgreSQL driver binds a `valueClobFile` as `varchar`, which cannot be assi
 
 - **Versioned files.** Liquibase checksums include the file content, so an applied file is never edited. A change means a new `…v2.json`, a new changeset updating the row, and the spec pointing to v2. Stored notifications keep their original parameters.
 - **One validation path.** Generated DTOs map the per-type `parameters` schemas to a generic JSON type (openapi-generator `schemaMappings` → `JsonNode`). The web adapter builds the generic command (`type`, `customerIds`, `parameters`). The JSON Schema validator remains the only parameter validator, so every violation returns the same 422 response, not a mix of Jackson 400s and Bean Validation errors.
-- **Generated `oneOf` (openapi-generator 7.26, `spring`).** With a single variant the generator flattens the `oneOf` into one concrete `CreateNotificationRequest` class (`type` enum, `customerIds`, `parameters: JsonNode`). From two variants on it generates an interface with `@JsonTypeInfo`/`@JsonSubTypes` and one class per variant. The web adapter only reads `type`, `customerIds` and `parameters`, so adding the second type changes that mapping only. An unknown `type` fails Jackson deserialization in both shapes; the error handler maps it to the same 422 as an unknown type in the catalog (AC-11).
+- **Generated `oneOf` (openapi-generator 7.26, `spring`).** With a single variant the generator flattens the `oneOf` into one concrete `CreateNotificationRequest` class (`type` enum, `customerIds`, `parameters: JsonNode`). From two variants on it generates an interface with `@JsonTypeInfo`/`@JsonSubTypes` and one class per variant. The web adapter only reads `type`, `customerIds` and `parameters`, so adding the second type changes that mapping only. An unknown `type` fails Jackson deserialization in both shapes; the error handler maps it to the same 422 as an unknown type in the catalog (AC-11). The shared handler stays context-agnostic: before answering 400 for an unreadable body it asks the `UnreadableBodyTranslator` beans, and the notification web adapter contributes the one that recognises a failed `type`.
 - **Swagger UI.** The spec and the schema files are served as static resources (`/openapi/**`, `/schemas/**`) with the same relative layout, so Swagger UI resolves the external `$ref`. springdoc's Swagger UI points at the static spec. springdoc cannot disable its runtime spec generation without also disabling Swagger UI, so `/v3/api-docs` stays enabled but the security chain denies it; only `/v3/api-docs/swagger-config` is public.
 - **Drift guard.** A test asserts that every active `notification_types` row has a matching discriminator mapping in the spec, and that its stored `parameters_schema` equals the referenced file.
 - **Adding a type:** schema file + spec variant + Liquibase changeset (type and templates). This takes a release, which is consistent with D-6.
@@ -271,17 +271,17 @@ The PostgreSQL driver binds a `valueClobFile` as `varchar`, which cannot be assi
 
 ### 7.1 Flow
 
-1. Load `NotificationType` by `code`. Missing or inactive → 422.
-2. Validate `parameters` against the type's **JSON Schema** (`networknt/json-schema-validator`). Invalid → 422 with the list of violations.
-3. Normalize parameters and compute the **event key** (§7.3).
-4. For each `customerId`:
-   1. Insert a `notification` row with `ON CONFLICT (notification_type_id, event_key, customer_id) DO NOTHING`. If nothing was inserted, the outcome is `DUPLICATE` (return the existing notification).
-   2. Resolve the customer's active lists for the type (one per channel) and their active members.
-   3. If there are no lists or no active members, the outcome is `NO_RECIPIENTS`. The notification row is still stored as an auditable record.
-   4. Otherwise, for each list, pick the template for the list's channel, render it, and create one `PENDING` delivery per member with an **address snapshot** and the **rendered content**.
-5. Commit everything in a single transaction. After commit, trigger the dispatcher.
+1. Load `NotificationType` by `code`. Missing or inactive → 422 (violation on `/type`).
+2. Normalize `parameters` (§7.3), then validate them against the type's **JSON Schema** (`networknt/json-schema-validator`). Invalid → 422 with the list of violations, pointers relative to the body (`/parameters/confidence`). Normalizing first means what is validated is exactly what is hashed, stored and rendered: a whitespace-only `siteName` normalizes to `""` and fails `minLength`.
+3. Compute the **event key** (§7.3).
+4. For each distinct `customerId`, build the notification:
+   1. Resolve the customer's active lists for the type (one per channel) and their active members (`RecipientResolver`).
+   2. If there are no lists or no active members, the outcome is `NO_RECIPIENTS`. The notification is still stored as an auditable record.
+   3. Otherwise, for each list, pick the template for the list's channel, render it, and create one `PENDING` delivery per member with an **address snapshot** and the **rendered content**.
+5. Save all of them with one repository call, in a single transaction. Per customer, in ascending `customerId` order, it inserts the `notification` row with `ON CONFLICT (notification_type_id, event_key, customer_id) DO NOTHING`, then its deliveries. If nothing was inserted, the outcome is `DUPLICATE` and the existing notification is returned instead (its deliveries count in the response).
+6. Once that call has committed, the use case publishes `NotificationsAccepted` with the ids of the new notifications that have deliveries, which triggers the dispatcher (§9).
 
-The unique constraint, not a prior `SELECT`, is what guarantees deduplication under concurrent calls.
+The unique constraint, not a prior `SELECT`, is what guarantees deduplication under concurrent calls: a second request blocks on the conflicting row until the first commits, then skips it. Inserting in customer order means two requests for overlapping customers wait on each other in the same order and cannot deadlock. Recipients are resolved before the transaction, so a duplicate costs one wasted (cheap) lookup; it is never stored.
 
 ### 7.2 Parameter schema
 
@@ -319,7 +319,7 @@ Validation uses networknt json-schema-validator **2.x** with format assertions o
 eventKey = hex( SHA-256( typeCode + "\n" + canonicalJson(normalizedParameters) ) )
 ```
 
-- **Normalization** (after validation): trim strings and collapse internal whitespace runs to a single space. Values are otherwise case-sensitive.
+- **Normalization** (before validation, §7.1): trim strings and collapse internal whitespace runs to a single space. Values are otherwise case-sensitive.
 - **Canonical JSON:** RFC 8785 (JCS). Keys are sorted, there is no insignificant whitespace, and numbers use a canonical form.
 - The **normalized** parameters are what gets stored and rendered.
 - The event key is returned to the caller and stored on every notification. It is the **event reference** required by FR.1.6.
@@ -350,7 +350,7 @@ Result:
 ## 9. Dispatch
 
 - `notification_deliveries` with `status = PENDING` is the **work queue**. The deliveries are written in the same transaction as the notification, so no event can be lost between acceptance and sending.
-- **Dispatcher:** runs `@Scheduled(fixedDelay = 10s)` and is also triggered after each notification commit (`@TransactionalEventListener(AFTER_COMMIT)`) for low latency. Each delivery is processed in its own transaction:
+- **Dispatcher:** runs `@Scheduled(fixedDelay = 10s)` and is also triggered after each notification commit for low latency: the create use case publishes `NotificationsAccepted` once the repository call has committed (transactions live in the repository adapters, so a plain event listener already runs after commit). Each delivery is processed in its own transaction:
   ```sql
   SELECT * FROM notification_deliveries
   WHERE status = 'PENDING' AND next_attempt_at <= now()

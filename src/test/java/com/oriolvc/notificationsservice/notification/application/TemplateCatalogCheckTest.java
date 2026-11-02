@@ -24,7 +24,12 @@ class TemplateCatalogCheckTest {
     @Test
     void aPlaceholderMissingFromTheSchemaStopsTheApplication() {
         final NotificationType broken = new NotificationType(
-                2, "BROKEN", "Broken", false, SCHEMA, Map.of(Channel.EMAIL, new Template(Channel.EMAIL, "s", "{{x}}")));
+                2,
+                "BROKEN",
+                "Broken",
+                false,
+                SCHEMA,
+                Map.of(Channel.EMAIL, new Template(9, Channel.EMAIL, "s", "{{x}}")));
 
         assertThatThrownBy(() -> check(TYPE, broken).afterSingletonsInstantiated())
                 .isInstanceOf(IllegalStateException.class)

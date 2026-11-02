@@ -11,7 +11,7 @@ import java.util.stream.Stream;
  * The message of one notification type on one channel, with {@code {{name}}} placeholders for top-level parameters.
  * {@code subject} is required for EMAIL and {@code null} for channels without one (RFC 8).
  */
-public record Template(Channel channel, String subject, String body) {
+public record Template(long id, Channel channel, String subject, String body) {
 
     static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{([A-Za-z_][A-Za-z0-9_]*)}}");
 

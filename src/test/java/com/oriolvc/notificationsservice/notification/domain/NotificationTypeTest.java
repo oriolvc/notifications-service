@@ -22,7 +22,7 @@ class NotificationTypeTest {
 
     @Test
     void placeholdersMissingFromTheSchemaAreReported() {
-        final Template template = new Template(Channel.EMAIL, "{{siteNam}}", "{{siteName}} {{issuedOn}}");
+        final Template template = new Template(1, Channel.EMAIL, "{{siteNam}}", "{{siteName}} {{issuedOn}}");
         final NotificationType type =
                 new NotificationType(1, "T", "Type", true, SCHEMA, Map.of(Channel.EMAIL, template));
 

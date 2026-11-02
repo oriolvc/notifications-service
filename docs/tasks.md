@@ -145,7 +145,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** unit tests cover **AC-2** (exact sample message), **AC-7** (whitespace → same key), **AC-8** (confidence change → new key) and the **AC-12** violations.
 
-## [ ] T7 — Create notification
+## [x] T7 — Create notification
 
 **Goal:** `POST /notifications`, end to end up to `PENDING` deliveries. RFC §7.1.
 

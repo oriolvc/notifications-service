@@ -19,7 +19,8 @@ final class NotificationTypeDboMapper {
                 dbo.isActive(),
                 new ParametersSchema(JsonMapper.shared().readTree(dbo.getParametersSchema())),
                 dbo.getTemplates().stream()
-                        .map(template -> new Template(template.getChannel(), template.getSubject(), template.getBody()))
+                        .map(template -> new Template(
+                                template.getId(), template.getChannel(), template.getSubject(), template.getBody()))
                         .collect(Collectors.toMap(Template::channel, Function.identity())));
     }
 }

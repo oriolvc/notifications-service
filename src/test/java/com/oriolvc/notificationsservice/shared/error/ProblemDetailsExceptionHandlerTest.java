@@ -22,7 +22,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 class ProblemDetailsExceptionHandlerTest {
 
-    private final ProblemDetailsExceptionHandler handler = new ProblemDetailsExceptionHandler();
+    private final ProblemDetailsExceptionHandler handler = new ProblemDetailsExceptionHandler(List.of());
     private final ServletWebRequest request =
             new ServletWebRequest(new MockHttpServletRequest("GET", "/distribution-lists/7"));
 

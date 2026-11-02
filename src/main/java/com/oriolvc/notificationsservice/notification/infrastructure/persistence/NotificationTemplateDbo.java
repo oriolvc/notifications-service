@@ -36,6 +36,10 @@ class NotificationTemplateDbo {
     @Column(name = "body", nullable = false)
     private String body;
 
+    Long getId() {
+        return id;
+    }
+
     Channel getChannel() {
         return channel;
     }

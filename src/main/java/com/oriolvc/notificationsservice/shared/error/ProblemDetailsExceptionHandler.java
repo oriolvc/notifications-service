@@ -37,6 +37,12 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
 
     private static final Logger log = LoggerFactory.getLogger(ProblemDetailsExceptionHandler.class);
 
+    private final List<UnreadableBodyTranslator> unreadableBodyTranslators;
+
+    public ProblemDetailsExceptionHandler(final List<UnreadableBodyTranslator> unreadableBodyTranslators) {
+        this.unreadableBodyTranslators = List.copyOf(unreadableBodyTranslators);
+    }
+
     @ExceptionHandler(ProblemException.class)
     ResponseEntity<Object> handleProblem(final ProblemException ex, final WebRequest request) {
         return problem(ex.type(), ex.getMessage(), ex.violations(), request);
@@ -117,7 +123,12 @@ public class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandl
             final HttpHeaders headers,
             final HttpStatusCode status,
             final WebRequest request) {
-        return problem(ProblemType.MALFORMED_REQUEST, "The request body is not readable JSON", List.of(), request);
+        return unreadableBodyTranslators.stream()
+                .flatMap(translator -> translator.translate(ex).stream())
+                .findFirst()
+                .map(problem -> handleProblem(problem, request))
+                .orElseGet(() -> problem(
+                        ProblemType.MALFORMED_REQUEST, "The request body is not readable JSON", List.of(), request));
     }
 
     /** Every other Spring MVC exception: keep Spring's status and detail, add our type and request id. */

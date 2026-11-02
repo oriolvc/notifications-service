@@ -93,6 +93,7 @@ Rules:
   - 422: semantic validation (unknown type, schema violations)
   - 409: version conflict or duplicate
   - 404: missing resource **or another tenant's resource** (never 403 for cross-tenant)
+  A context that needs a binding failure reported as something other than 400 contributes an `UnreadableBodyTranslator` bean (e.g. an unknown notification `type` → 422) instead of adding context knowledge to the advice.
 
 **Persistence**
 - `spring.jpa.hibernate.ddl-auto=validate`. The schema comes only from Liquibase YAML.

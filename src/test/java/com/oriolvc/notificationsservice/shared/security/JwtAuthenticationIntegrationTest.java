@@ -39,7 +39,7 @@ class JwtAuthenticationIntegrationTest extends IntegrationTest {
 
     @Test
     void publisherPassesAuthorization() {
-        assertThat(postNotification(JwtTokens.publisher())).hasStatus(HttpStatus.NOT_IMPLEMENTED);
+        assertThat(postNotification(JwtTokens.publisher())).hasStatus(HttpStatus.ACCEPTED);
     }
 
     @Test

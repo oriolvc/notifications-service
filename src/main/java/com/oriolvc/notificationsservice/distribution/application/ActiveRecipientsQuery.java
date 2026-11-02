@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Who receives a notification: the active members of the customer's active lists for the notification type, one list
- * per channel. Read by the notification context through its {@code RecipientResolver} port (T7).
+ * per channel. Read by the notification context through its {@code RecipientResolver} port.
  */
 @Service
 public class ActiveRecipientsQuery {

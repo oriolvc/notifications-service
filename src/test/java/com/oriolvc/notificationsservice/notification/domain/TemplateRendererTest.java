@@ -49,7 +49,8 @@ class TemplateRendererTest {
                 {"type": "object", "properties": {"note": {"type": "string"}, "count": {"type": "integer"},
                  "flag": {"type": "boolean"}, "code": {"oneOf": [{"const": "A"}]}}}
                 """));
-        final Template template = new Template(Channel.EMAIL, null, "{{count}}|{{flag}}|{{code}}|{{note}}|{{ note }}");
+        final Template template =
+                new Template(1, Channel.EMAIL, null, "{{count}}|{{flag}}|{{code}}|{{note}}|{{ note }}");
 
         final RenderedMessage message =
                 TemplateRenderer.render(template, schema, json("{\"count\": 3, \"flag\": true, \"code\": \"A\"}"));

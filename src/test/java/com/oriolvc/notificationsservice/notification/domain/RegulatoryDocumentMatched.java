@@ -20,6 +20,7 @@ public final class RegulatoryDocumentMatched {
     public static final ParametersSchema SCHEMA =
             new ParametersSchema(json(classpath("schemas/regulatory-document-matched.v1.json")));
     public static final Template EMAIL_TEMPLATE = new Template(
+            1,
             Channel.EMAIL,
             "{{authorityName}} {{documentType}} – {{siteName}}",
             "{{siteName}}, located at {{siteAddress}}, received a {{authorityName}} {{documentType}} on {{issueDate}}."
