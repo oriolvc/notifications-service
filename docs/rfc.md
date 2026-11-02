@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | Author | Oriol Vaquer |
-| Status | Draft v2 (supersedes `initial_rfc.md`) |
-| Date | 2026-10-30 |
+| Status | v3, implemented (tasks T0–T11 in `docs/tasks.md`) |
+| Date | 2026-11-02 |
 | Stack | Java 25 · Spring Boot 4 · Liquibase 5 · PostgreSQL 18 |
 
 ---
@@ -564,11 +564,11 @@ Dispatch metrics are recorded while the delivery's transaction is still open. If
 ## 15. Testing strategy
 
 - **Unit (domain/application):** schema validation, normalization and event key, renderer and formatting, retry/backoff policy, aggregate invariants, use cases with fake ports.
-- **Integration:** `@SpringBootTest` + **Testcontainers `postgres:18`** + **GreenMail** (SMTP; outages simulated by pointing the mail sender at a closed port, SMTP 4xx/5xx replies by a small scripted SMTP server, since GreenMail accepts every recipient) + `spring-security-test` JWTs. Covers each AC above end to end through the HTTP API.
-- **Contract:** the drift guard from §6.3 (DB types ↔ spec variants ↔ schema files). Request/response validation against the OpenAPI spec in integration tests (e.g. `swagger-request-validator`).
-- **Fixtures:** the notification type and template are seeded by the main Liquibase changelog. Test data (customers' lists and members) lives in a Liquibase `test` context plus `@Sql` scripts under `src/test/resources/fixtures`, so tests run on a clean database.
+- **Integration:** `@SpringBootTest` + **Testcontainers `postgres:18`** + **GreenMail** (SMTP; outages simulated by pointing the mail sender at a closed port, SMTP 4xx/5xx replies by a small scripted SMTP server, since GreenMail accepts every recipient) + real JWTs signed with a dev key pair (so the decoder and claim mapping are exercised). Covers each AC above end to end through the HTTP API; the AC → test map is in the README.
+- **Contract:** the drift guard from §6.3 (DB types ↔ spec variants ↔ schema files). Every request and response in the integration tests is validated against the OpenAPI spec (Atlassian `openapi-request-validator`); an undocumented status or body fails the test. A second check keeps the `SecurityFilterChain` in line with the spec's `x-required-roles`.
+- **Fixtures:** the notification type and template are seeded by the main Liquibase changelog. Test data (customers' lists and members) lives in `@Sql` scripts under `src/test/resources/fixtures`. Before each test, every table except the Liquibase seed is truncated, so tests never depend on order.
 - **Coverage:** JaCoCo `check` goal, **line coverage ≥ 90 %**; the build fails below it. Generated OpenAPI DTOs are excluded.
-- **Determinism:** `Clock` is injected; the dispatcher can be triggered synchronously in tests.
+- **Determinism:** `Clock` is injected; the dispatch triggers are off in tests, which run the dispatcher synchronously and move `next_attempt_at` back instead of the clock.
 
 ## 16. Decisions
 
@@ -586,12 +586,16 @@ Dispatch metrics are recorded while the delivery's transaction is still open. If
 
 ## 17. Open questions (for the product owner)
 
-- **Q-1** Who manages distribution lists: customers (assumed) or Qualifyze staff on their behalf?
-- **Q-2** Should a confidence change for an already-notified match trigger a new notification? Currently yes (A-9). The alternative is to mark identity fields in the schema and exclude `confidence` from the hash.
-- **Q-3** Exact wording: should the message follow the template or the sample ("Site …" prefix), and should "a OAI" be "an OAI"?
-- **Q-4** Is a subject format / sender address defined by brand guidelines?
-- **Q-5** Should repeated `FAILED` deliveries for a member alert the customer admin?
-- **Q-6** Retention period for notifications and audit data.
+Each question has a working answer in the implementation, and changing it is local.
+
+| # | Question | Current behaviour | To change it |
+|---|---|---|---|
+| Q-1 | Who manages distribution lists: customers (assumed) or Qualifyze staff on their behalf? | Customer users with `DISTRIBUTION_LIST_ADMIN`, tenant from the JWT (A-4) | A staff role with a tenant parameter: one rule in the `SecurityFilterChain`, and the tenant read from the path for that role |
+| Q-2 | Should a confidence change for an already-notified match trigger a new notification? | Yes: every parameter is part of the event key (A-9, AC-8) | Mark identity fields in the parameter schema (a new `vN+1`) and hash only those |
+| Q-3 | Exact wording: template or sample ("Site …" prefix), and "a OAI" or "an OAI"? | The FR.1.2 template, verbatim (A-11) | A Liquibase changeset with the new template; existing deliveries keep what was sent (D-7) |
+| Q-4 | Is a subject format / sender address defined by brand guidelines? | Subject per A-12; sender from `MAIL_FROM` | The same template changeset; `MAIL_FROM` per environment |
+| Q-5 | Should repeated `FAILED` deliveries for a member alert the customer admin? | No; they are visible through tracking and the `notification_deliveries_total{status="FAILED"}` metric | A new notification type sent to the list admins, triggered when a delivery fails |
+| Q-6 | Retention period for notifications and audit data? | Kept indefinitely (non-goal) | A scheduled purge or partitioning by `created_at`, once the period is agreed |
 
 ## 18. Requirements traceability
 

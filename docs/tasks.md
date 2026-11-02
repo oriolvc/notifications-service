@@ -202,7 +202,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** all metrics in RFC §13 are exposed and tested.
 
-## [ ] T11 — Hardening and submission
+## [x] T11 — Hardening and submission
 
 **Goal:** a submission a reviewer can run and understand in 10 minutes.
 
