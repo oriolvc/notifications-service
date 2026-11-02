@@ -1,9 +1,9 @@
 package com.oriolvc.notificationsservice.notification.application;
 
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
-import com.oriolvc.notificationsservice.notification.domain.DeliveryRepository;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import com.oriolvc.notificationsservice.notification.domain.SendResult;
+import com.oriolvc.notificationsservice.notification.domain.ports.DeliveryRepository;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

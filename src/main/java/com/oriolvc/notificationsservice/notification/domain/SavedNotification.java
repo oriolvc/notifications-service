@@ -1,5 +1,7 @@
 package com.oriolvc.notificationsservice.notification.domain;
 
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationRepository;
+
 /**
  * A notification as stored by {@link NotificationRepository#saveAllIfAbsent}.
  *

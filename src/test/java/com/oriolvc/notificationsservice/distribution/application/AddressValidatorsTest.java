@@ -3,7 +3,7 @@ package com.oriolvc.notificationsservice.distribution.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.oriolvc.notificationsservice.distribution.domain.AddressValidator;
+import com.oriolvc.notificationsservice.distribution.domain.ports.AddressValidator;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.List;
 import org.junit.jupiter.api.Test;

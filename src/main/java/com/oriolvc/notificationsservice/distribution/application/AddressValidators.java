@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
-import com.oriolvc.notificationsservice.distribution.domain.AddressValidator;
+import com.oriolvc.notificationsservice.distribution.domain.ports.AddressValidator;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.EnumMap;
 import java.util.List;

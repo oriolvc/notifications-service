@@ -1,7 +1,7 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.web;
 
 import com.oriolvc.notificationsservice.generated.model.CreateNotificationRequest;
-import com.oriolvc.notificationsservice.notification.domain.UnknownNotificationTypeException;
+import com.oriolvc.notificationsservice.notification.domain.exceptions.UnknownNotificationTypeException;
 import com.oriolvc.notificationsservice.shared.error.ProblemException;
 import com.oriolvc.notificationsservice.shared.error.UnreadableBodyTranslator;
 import java.util.List;

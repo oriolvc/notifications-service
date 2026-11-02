@@ -1,7 +1,7 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.persistence;
 
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;

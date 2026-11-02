@@ -42,14 +42,16 @@ Single deployable, hexagonal, two bounded contexts plus a small shared kernel.
 ```
 com.oriolvc.notificationsservice
 ├── distribution/              who receives what: distribution lists and members
-│   ├── domain/                aggregates, value objects, repository interfaces
+│   ├── domain/                aggregates, value objects
+│   │   ├── ports/             repository interfaces and other interfaces the domain defines
+│   │   └── exceptions/        domain exceptions (each maps to a ProblemDetail status)
 │   ├── application/           use cases, query services
 │   │   └── model/             commands, views and other records the use cases take or return
 │   └── infrastructure/
 │       ├── web/               controllers implementing generated API interfaces + DTO mappers
 │       └── persistence/       DBOs, DAOs and the domain repository implementations
 ├── notification/              types, templates, notifications, deliveries, dispatch
-│   ├── domain/
+│   ├── domain/                same layout, plus parameters/ (schema, validation port, normalization)
 │   ├── application/           incl. ports: RecipientResolver, ChannelSender
 │   └── infrastructure/
 │       ├── web/

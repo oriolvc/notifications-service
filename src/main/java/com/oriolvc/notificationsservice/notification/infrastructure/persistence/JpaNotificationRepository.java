@@ -2,9 +2,9 @@ package com.oriolvc.notificationsservice.notification.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
-import com.oriolvc.notificationsservice.notification.domain.NotificationRepository;
 import com.oriolvc.notificationsservice.notification.domain.NotificationSummary;
 import com.oriolvc.notificationsservice.notification.domain.SavedNotification;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.Comparator;

@@ -3,8 +3,8 @@ package com.oriolvc.notificationsservice.distribution.application;
 import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.RemoveDistributionListMemberCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.DistributionListNotFoundException;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import org.springframework.stereotype.Service;
 
 /** Soft delete (D-5). Idempotent: removing an inactive member changes nothing. */

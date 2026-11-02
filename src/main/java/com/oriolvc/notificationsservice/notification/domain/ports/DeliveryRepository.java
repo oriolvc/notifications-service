@@ -1,5 +1,6 @@
-package com.oriolvc.notificationsservice.notification.domain;
+package com.oriolvc.notificationsservice.notification.domain.ports;
 
+import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Consumer;

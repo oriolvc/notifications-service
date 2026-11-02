@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.metrics;
 
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import com.oriolvc.notificationsservice.notification.application.NotificationTypeQuery;
 import com.oriolvc.notificationsservice.notification.application.model.NotificationTypeRef;
 import com.oriolvc.notificationsservice.shared.domain.Channel;

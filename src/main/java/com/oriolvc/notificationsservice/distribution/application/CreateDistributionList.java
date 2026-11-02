@@ -4,7 +4,7 @@ import com.oriolvc.notificationsservice.distribution.application.DistributionMet
 import com.oriolvc.notificationsservice.distribution.application.model.CreateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import com.oriolvc.notificationsservice.notification.application.NotificationTypeQuery;
 import com.oriolvc.notificationsservice.notification.application.model.NotificationTypeRef;
 import com.oriolvc.notificationsservice.shared.error.UnprocessableException;

@@ -207,6 +207,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 **Goal:** a codebase that is easier to navigate and review before submission, with no change in behaviour.
 
 - Group the notification domain's parameter code (schema, validation port, normalization, canonical JSON, the 422 exception) in a `parameters` package.
+- In every context's domain, move repository and other interfaces to `ports` and exceptions to `exceptions`.
 - Further cleanups as agreed during the task.
 
 **Done when:** `./mvnw verify` is green with the same tests, and the API, schema and RFC behaviour are unchanged.

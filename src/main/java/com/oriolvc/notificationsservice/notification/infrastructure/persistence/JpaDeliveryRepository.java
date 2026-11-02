@@ -2,8 +2,8 @@ package com.oriolvc.notificationsservice.notification.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryAttempt;
-import com.oriolvc.notificationsservice.notification.domain.DeliveryRepository;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
+import com.oriolvc.notificationsservice.notification.domain.ports.DeliveryRepository;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Consumer;

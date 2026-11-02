@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.distribution.domain;
+package com.oriolvc.notificationsservice.distribution.domain.exceptions;
 
 import com.oriolvc.notificationsservice.shared.error.AlreadyExistsException;
 

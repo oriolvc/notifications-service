@@ -6,10 +6,10 @@ import com.oriolvc.notificationsservice.notification.application.model.Notificat
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
-import com.oriolvc.notificationsservice.notification.domain.NotificationNotFoundException;
-import com.oriolvc.notificationsservice.notification.domain.NotificationRepository;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
+import com.oriolvc.notificationsservice.notification.domain.exceptions.NotificationNotFoundException;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationRepository;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import org.springframework.stereotype.Service;
 
 /** Tracking (RFC 6.1, AC-4). Another tenant's notification is reported as not found. */

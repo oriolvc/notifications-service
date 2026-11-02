@@ -2,7 +2,7 @@ package com.oriolvc.notificationsservice.distribution.application;
 
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.application.model.ListDistributionListsCommand;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 

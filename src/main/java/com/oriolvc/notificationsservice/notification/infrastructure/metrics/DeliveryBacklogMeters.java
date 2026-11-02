@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.metrics;
 
-import com.oriolvc.notificationsservice.notification.domain.DeliveryRepository;
+import com.oriolvc.notificationsservice.notification.domain.ports.DeliveryRepository;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;

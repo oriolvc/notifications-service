@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.oriolvc.notificationsservice.IntegrationTest;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.notification.domain.RegulatoryDocumentMatched;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

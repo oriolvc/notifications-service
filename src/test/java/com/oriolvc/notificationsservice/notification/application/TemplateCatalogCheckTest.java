@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.notification.domain.Template;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.List;
 import java.util.Map;

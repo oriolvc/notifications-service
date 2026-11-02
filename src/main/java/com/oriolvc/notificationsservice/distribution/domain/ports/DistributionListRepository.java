@@ -1,5 +1,6 @@
-package com.oriolvc.notificationsservice.distribution.domain;
+package com.oriolvc.notificationsservice.distribution.domain.ports;
 
+import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.List;
 import java.util.Optional;

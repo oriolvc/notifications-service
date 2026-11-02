@@ -8,14 +8,14 @@ import com.oriolvc.notificationsservice.notification.application.model.Notificat
 import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.NotificationOutcome;
-import com.oriolvc.notificationsservice.notification.domain.NotificationRepository;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.notification.domain.SavedNotification;
-import com.oriolvc.notificationsservice.notification.domain.UnknownNotificationTypeException;
+import com.oriolvc.notificationsservice.notification.domain.exceptions.UnknownNotificationTypeException;
 import com.oriolvc.notificationsservice.notification.domain.parameters.InvalidParametersException;
 import com.oriolvc.notificationsservice.notification.domain.parameters.ParameterNormalizer;
 import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersValidator;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationRepository;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.shared.error.Violation;
 import java.time.Clock;
 import java.time.Instant;

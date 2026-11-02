@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.notification.application;
 
-import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
+import com.oriolvc.notificationsservice.notification.domain.ports.NotificationTypeRepository;
 import java.util.List;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;

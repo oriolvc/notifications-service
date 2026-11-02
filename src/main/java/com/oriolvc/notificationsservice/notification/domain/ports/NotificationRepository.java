@@ -1,5 +1,9 @@
-package com.oriolvc.notificationsservice.notification.domain;
+package com.oriolvc.notificationsservice.notification.domain.ports;
 
+import com.oriolvc.notificationsservice.notification.domain.EventKey;
+import com.oriolvc.notificationsservice.notification.domain.Notification;
+import com.oriolvc.notificationsservice.notification.domain.NotificationSummary;
+import com.oriolvc.notificationsservice.notification.domain.SavedNotification;
 import java.util.List;
 import java.util.Optional;
 

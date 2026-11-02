@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.oriolvc.notificationsservice.distribution.domain.InvalidAddressException;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.InvalidAddressException;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

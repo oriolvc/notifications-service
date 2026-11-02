@@ -1,7 +1,7 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.persistence;
 
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;

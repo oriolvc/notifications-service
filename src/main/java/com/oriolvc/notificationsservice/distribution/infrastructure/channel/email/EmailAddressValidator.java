@@ -1,7 +1,7 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.channel.email;
 
-import com.oriolvc.notificationsservice.distribution.domain.AddressValidator;
-import com.oriolvc.notificationsservice.distribution.domain.InvalidAddressException;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.InvalidAddressException;
+import com.oriolvc.notificationsservice.distribution.domain.ports.AddressValidator;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;

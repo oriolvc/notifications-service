@@ -3,6 +3,11 @@ package com.oriolvc.notificationsservice.distribution.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.InvalidAddressException;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.MemberAlreadyActiveException;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.MemberLimitReachedException;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.MemberNotFoundException;
+import com.oriolvc.notificationsservice.distribution.domain.ports.AddressValidator;
 import com.oriolvc.notificationsservice.shared.domain.AuditMetadata;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.time.Instant;

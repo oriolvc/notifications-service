@@ -4,8 +4,8 @@ import com.oriolvc.notificationsservice.distribution.application.DistributionMet
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.application.model.UpdateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
-import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.distribution.domain.exceptions.DistributionListNotFoundException;
+import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import org.springframework.stereotype.Service;
 
 @Service
