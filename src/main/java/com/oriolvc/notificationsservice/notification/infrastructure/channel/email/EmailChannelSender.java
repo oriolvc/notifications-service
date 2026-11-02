@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.channel.email;
 
-import com.oriolvc.notificationsservice.notification.application.ChannelSender;
+import com.oriolvc.notificationsservice.notification.application.ports.ChannelSender;
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.SendResult;
 import com.oriolvc.notificationsservice.shared.domain.Channel;

@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.application;
 
+import com.oriolvc.notificationsservice.notification.application.ports.ChannelSender;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.EnumMap;
 import java.util.List;

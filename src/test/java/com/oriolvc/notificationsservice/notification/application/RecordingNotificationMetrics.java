@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.application;
 
+import com.oriolvc.notificationsservice.notification.application.ports.NotificationMetrics;
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.SendResult;

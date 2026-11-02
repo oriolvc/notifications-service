@@ -1,8 +1,9 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
-import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.CreateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
+import com.oriolvc.notificationsservice.distribution.application.ports.DistributionMetrics;
+import com.oriolvc.notificationsservice.distribution.application.ports.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.ports.DistributionListRepository;
 import com.oriolvc.notificationsservice.notification.application.NotificationTypeQuery;

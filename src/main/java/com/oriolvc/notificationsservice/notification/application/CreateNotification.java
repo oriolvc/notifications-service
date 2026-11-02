@@ -5,6 +5,8 @@ import com.oriolvc.notificationsservice.notification.application.model.CreateNot
 import com.oriolvc.notificationsservice.notification.application.model.CustomerOutcome;
 import com.oriolvc.notificationsservice.notification.application.model.CustomerResult;
 import com.oriolvc.notificationsservice.notification.application.model.NotificationsAccepted;
+import com.oriolvc.notificationsservice.notification.application.ports.NotificationMetrics;
+import com.oriolvc.notificationsservice.notification.application.ports.RecipientResolver;
 import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.NotificationOutcome;

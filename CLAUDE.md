@@ -43,16 +43,17 @@ Single deployable, hexagonal, two bounded contexts plus a small shared kernel.
 com.oriolvc.notificationsservice
 ├── distribution/              who receives what: distribution lists and members
 │   ├── domain/                aggregates, value objects
-│   │   ├── ports/             repository interfaces and other interfaces the domain defines
+│   │   ├── ports/             repositories, and interfaces the domain model itself calls
 │   │   └── exceptions/        domain exceptions (each maps to a ProblemDetail status)
 │   ├── application/           use cases, query services
+│   │   ├── ports/             interfaces only use cases call: outside capabilities, other contexts, metrics
 │   │   └── model/             commands, views and other records the use cases take or return
 │   └── infrastructure/
 │       ├── web/               controllers implementing generated API interfaces + DTO mappers
 │       └── persistence/       DBOs, DAOs and the domain repository implementations
 ├── notification/              types, templates, notifications, deliveries, dispatch
 │   ├── domain/                same layout, plus parameters/ (schema, validation port, normalization)
-│   ├── application/           incl. ports: RecipientResolver, ChannelSender
+│   ├── application/           same layout; ports: RecipientResolver, ChannelSender, NotificationMetrics
 │   └── infrastructure/
 │       ├── web/
 │       ├── persistence/
@@ -64,6 +65,7 @@ com.oriolvc.notificationsservice
 
 Rules:
 - Dependencies point inward: `infrastructure → application → domain`.
+- **Where a port lives:** repositories, and interfaces the domain model itself calls (e.g. `AddressValidator`, passed to `DistributionList.addMember`), go in `domain/ports`. Interfaces that only use cases call (sending through a channel, reading another context, recording metrics) go in `application/ports`. Exception: `ParametersValidator` stays with the rest of the parameter code in `domain/parameters`.
 - `notification` reaches `distribution` **only** through the `RecipientResolver` port. Never import `distribution.domain` or its repositories from `notification`. The reverse direction (validating a notification type code) goes through a query service in `notification.application`.
 - **Separate persistence model:** `domain` is plain Java, with no JPA, Envers or Spring Data annotations. Jackson 3 `JsonNode` is allowed there for JSON-shaped values (parameters, schemas). Per aggregate, `infrastructure/persistence` holds (all package-private):
   - `XxxDbo`: the `@Entity` (`@Audited`, `@Version`, audit columns via `AuditedDbo`)

@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.distribution.application;
+package com.oriolvc.notificationsservice.distribution.application.ports;
 
 /** Self-service engagement metrics (RFC 13.1). */
 public interface DistributionMetrics {

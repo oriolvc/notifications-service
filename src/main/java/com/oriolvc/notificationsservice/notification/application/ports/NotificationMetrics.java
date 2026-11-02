@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.notification.application;
+package com.oriolvc.notificationsservice.notification.application.ports;
 
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.Notification;

@@ -3,6 +3,7 @@ package com.oriolvc.notificationsservice.notification.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
+import com.oriolvc.notificationsservice.notification.application.ports.ChannelSender;
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import com.oriolvc.notificationsservice.notification.domain.RenderedMessage;

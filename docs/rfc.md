@@ -82,7 +82,7 @@ Single deployable, **hexagonal architecture**, two bounded contexts:
 
 The Notification context reads recipients through a port (`RecipientResolver`) implemented by an adapter over the Distribution context's application service. There is no direct repository access across contexts.
 
-Package layout per context: `domain` (aggregates and value objects; `ports` for repository interfaces and the other interfaces it defines, `exceptions` for domain exceptions; plain Java) · `application` (use cases) · `infrastructure` (web, persistence, email, scheduling).
+Package layout per context: `domain` (aggregates and value objects; `ports` for repositories and the interfaces the model itself calls, `exceptions` for domain exceptions; plain Java) · `application` (use cases; `ports` for the interfaces only use cases call, such as `ChannelSender`, `RecipientResolver` and the metrics ports) · `infrastructure` (web, persistence, email, scheduling).
 
 The persistence model is separate from the domain model: JPA/Envers mapping lives in DBOs in `infrastructure/persistence`, queried through Spring Data DAOs. A repository adapter implements each domain repository interface by calling its DAO and mapping DBO ↔ aggregate, so the domain carries no persistence annotations. Transactions are opened by these repository adapters, not by the use cases: each repository call is one transaction, and data that must commit together is saved by a single repository call.
 

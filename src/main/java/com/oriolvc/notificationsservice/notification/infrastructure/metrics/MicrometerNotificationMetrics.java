@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.metrics;
 
-import com.oriolvc.notificationsservice.notification.application.NotificationMetrics;
+import com.oriolvc.notificationsservice.notification.application.ports.NotificationMetrics;
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryAttempt;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;

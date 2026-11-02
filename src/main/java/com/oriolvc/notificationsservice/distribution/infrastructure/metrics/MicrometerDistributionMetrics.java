@@ -1,6 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.metrics;
 
-import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics;
+import com.oriolvc.notificationsservice.distribution.application.ports.DistributionMetrics;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Component;

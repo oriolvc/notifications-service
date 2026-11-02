@@ -1,7 +1,7 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.distribution;
 
 import com.oriolvc.notificationsservice.distribution.application.ActiveRecipientsQuery;
-import com.oriolvc.notificationsservice.notification.application.RecipientResolver;
+import com.oriolvc.notificationsservice.notification.application.ports.RecipientResolver;
 import com.oriolvc.notificationsservice.notification.domain.Recipient;
 import java.util.List;
 import org.springframework.stereotype.Component;
