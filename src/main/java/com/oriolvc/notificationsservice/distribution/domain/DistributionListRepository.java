@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.domain;
 
+import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,7 @@ public interface DistributionListRepository {
 
     /** The customer's active lists for a notification type: at most one per channel (A-13). */
     List<DistributionList> findActiveByCustomerIdAndNotificationTypeId(long customerId, long notificationTypeId);
+
+    /** Active lists of every customer for a notification type and channel. */
+    long countActive(long notificationTypeId, Channel channel);
 }

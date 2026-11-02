@@ -192,7 +192,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** **AC-4** passes, and cross-tenant reads are covered.
 
-## [ ] T10 — Metrics
+## [x] T10 — Metrics
 
 **Goal:** the adoption and performance metrics from RFC §13.
 

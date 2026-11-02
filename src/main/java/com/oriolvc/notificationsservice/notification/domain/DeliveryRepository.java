@@ -1,6 +1,7 @@
 package com.oriolvc.notificationsservice.notification.domain;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /** The {@code PENDING} deliveries are the dispatcher's work queue (RFC 9). */
@@ -14,4 +15,10 @@ public interface DeliveryRepository {
      * @return whether a delivery was due
      */
     boolean attemptNextDue(Instant now, Consumer<Delivery> attempt);
+
+    /** How many deliveries are {@code PENDING}, across every tenant. */
+    long countPending();
+
+    /** When the oldest {@code PENDING} delivery was accepted, if there is one. */
+    Optional<Instant> oldestPendingCreatedAt();
 }

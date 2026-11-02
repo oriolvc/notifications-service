@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.RemoveDistributionListMemberCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListNotFoundException;
@@ -11,9 +12,12 @@ import org.springframework.stereotype.Service;
 public class RemoveDistributionListMember {
 
     private final DistributionListRepository distributionListRepository;
+    private final DistributionMetrics metrics;
 
-    RemoveDistributionListMember(final DistributionListRepository distributionListRepository) {
+    RemoveDistributionListMember(
+            final DistributionListRepository distributionListRepository, final DistributionMetrics metrics) {
         this.distributionListRepository = distributionListRepository;
+        this.metrics = metrics;
     }
 
     public void execute(final RemoveDistributionListMemberCommand command) {
@@ -23,6 +27,7 @@ public class RemoveDistributionListMember {
         if (distributionList.member(command.memberId()).isActive()) {
             distributionList.removeMember(command.memberId());
             distributionListRepository.save(distributionList);
+            metrics.configChanged(ConfigChange.MEMBER_REMOVED);
         }
     }
 }

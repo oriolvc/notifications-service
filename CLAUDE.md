@@ -73,6 +73,7 @@ Rules:
 - **Use cases:** one class per use case, a single public method `execute(Command)`. Commands and results are records in `application/model`, apart from the use cases. No `@Transactional` in `application`.
 - **Transactions belong to the repository adapters** (`Jpa…Repository`): `@Transactional(readOnly = true)` on the class, `@Transactional` on the writes. A use case's read and its later save run in separate transactions, which is safe because `save` checks the version the aggregate was read at. Data that must be written atomically is saved by one repository call.
 - Generated OpenAPI code (DTOs, interfaces) never leaks past `infrastructure/web`.
+- Metrics (RFC 13): use cases report through a port (`NotificationMetrics`, `DistributionMetrics`); Micrometer lives only in `infrastructure/metrics`. Tag values come from small fixed sets, never ids or addresses.
 
 ## Conventions
 

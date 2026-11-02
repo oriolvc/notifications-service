@@ -29,6 +29,7 @@ public final class Delivery {
     private final String address;
     private final long templateId;
     private final RenderedMessage content;
+    private final Instant createdAt;
     private DeliveryStatus status;
     private int attemptCount;
     private Instant nextAttemptAt;
@@ -44,6 +45,7 @@ public final class Delivery {
             final String address,
             final long templateId,
             final RenderedMessage content,
+            final Instant createdAt,
             final DeliveryStatus status,
             final int attemptCount,
             final Instant nextAttemptAt,
@@ -57,6 +59,7 @@ public final class Delivery {
         this.address = Objects.requireNonNull(address, "address");
         this.templateId = templateId;
         this.content = Objects.requireNonNull(content, "content");
+        this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.status = Objects.requireNonNull(status, "status");
         this.attemptCount = attemptCount;
         this.nextAttemptAt = Objects.requireNonNull(nextAttemptAt, "nextAttemptAt");
@@ -76,6 +79,7 @@ public final class Delivery {
                 recipient.address(),
                 template.id(),
                 content,
+                now,
                 DeliveryStatus.PENDING,
                 0,
                 now,
@@ -93,6 +97,7 @@ public final class Delivery {
             final String address,
             final long templateId,
             final RenderedMessage content,
+            final Instant createdAt,
             final DeliveryStatus status,
             final Instant nextAttemptAt,
             final Instant sentAt,
@@ -106,6 +111,7 @@ public final class Delivery {
                 address,
                 templateId,
                 content,
+                createdAt,
                 status,
                 attempts.size(),
                 nextAttemptAt,
@@ -175,6 +181,11 @@ public final class Delivery {
 
     public RenderedMessage content() {
         return content;
+    }
+
+    /** When it was accepted, with its notification. */
+    public Instant createdAt() {
+        return createdAt;
     }
 
     public DeliveryStatus status() {

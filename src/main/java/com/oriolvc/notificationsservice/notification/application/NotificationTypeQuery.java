@@ -3,6 +3,7 @@ package com.oriolvc.notificationsservice.notification.application;
 import com.oriolvc.notificationsservice.notification.application.model.NotificationTypeRef;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
 import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,11 @@ public class NotificationTypeQuery {
     /** Any type, active or not: existing lists keep referencing a type that was deactivated. */
     public Optional<NotificationTypeRef> findById(final long id) {
         return types.findById(id).map(NotificationTypeQuery::toRef);
+    }
+
+    /** Every type, active or not. */
+    public List<NotificationTypeRef> findAll() {
+        return types.findAll().stream().map(NotificationTypeQuery::toRef).toList();
     }
 
     private static NotificationTypeRef toRef(final NotificationType type) {

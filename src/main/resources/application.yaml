@@ -38,11 +38,17 @@ logging:
   pattern:
     correlation: "[%X{requestId:-}] "
 
+# /actuator/prometheus is for publishers only (SecurityConfig); in production, a separate management port reachable
+# only from the internal network (RFC 13)
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 # Swagger UI renders the contract-first spec served from classpath:/openapi (ApiDocumentationConfig).
 # springdoc's generated spec cannot be switched off without losing Swagger UI, so SecurityConfig denies /v3/api-docs.

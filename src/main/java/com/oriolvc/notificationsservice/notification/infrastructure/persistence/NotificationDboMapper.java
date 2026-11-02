@@ -47,6 +47,7 @@ final class NotificationDboMapper {
                 dbo.getAddress(),
                 dbo.getTemplateId(),
                 new RenderedMessage(dbo.getSubject(), dbo.getBody()),
+                dbo.getCreatedAt(),
                 dbo.getStatus(),
                 dbo.getNextAttemptAt(),
                 dbo.getSentAt(),

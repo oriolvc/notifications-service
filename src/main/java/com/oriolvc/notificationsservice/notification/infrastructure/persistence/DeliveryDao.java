@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.persistence;
 
+import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,9 @@ interface DeliveryDao extends JpaRepository<DeliveryDbo, Long> {
                     FOR UPDATE SKIP LOCKED
                     """)
     Optional<DeliveryDbo> lockNextDue(@Param("now") Instant now);
+
+    long countByStatus(DeliveryStatus status);
+
+    @Query("SELECT min(d.createdAt) FROM DeliveryDbo d WHERE d.status = :status")
+    Optional<Instant> findOldestCreatedAtByStatus(@Param("status") DeliveryStatus status);
 }

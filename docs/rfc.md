@@ -501,28 +501,34 @@ All tables, including the Envers ones, are created by Liquibase (no `ddl-auto`).
 
 ## 13. Metrics
 
-Exposed with Micrometer through `/actuator/prometheus`.
+Exposed with Micrometer through `/actuator/prometheus`. Scraping needs a `NOTIFICATION_PUBLISHER` token (Prometheus sends it as a bearer token). In production the actuator would sit on a separate management port that only the internal network can reach.
+
+The use cases report through two ports, `NotificationMetrics` and `DistributionMetrics`, so the application layer has no Micrometer dependency. Tag values come only from small fixed sets (types, channels, statuses, error codes), never ids or addresses. The Prometheus names are listed alongside: dots become underscores, and counters get `_total`, timers `_seconds` and summaries `_count`/`_sum`.
 
 ### 13.1 Adoption
 
-| Metric | Type | Why |
+| Metric (Prometheus) | Type | Why |
 |---|---|---|
-| `notification.customers.reached.ratio`: ACCEPTED / (ACCEPTED + NO_RECIPIENTS) per event | gauge/summary | Main adoption signal: how many affected customers actually receive alerts |
-| `distribution.lists.active` by type, channel | gauge | Configured customers |
-| `distribution.list.members` per list | distribution summary | Reach per customer |
-| `notifications.created` by type, outcome | counter | Usage per week |
-| `distribution.config.changes` by operation | counter | Customer engagement with self-service |
+| `notification.customers.reached.ratio` (`notification_customers_reached_ratio`) by type: ACCEPTED / (ACCEPTED + NO_RECIPIENTS), one observation per event | summary | Main adoption signal: how many affected customers actually receive alerts. A replayed event is not counted again |
+| `distribution.lists.active` (`distribution_lists_active`) by type, channel | gauge | Configured customers |
+| `notification.recipients` (`notification_recipients`) by type: recipients of each ACCEPTED notification | distribution summary | Reach per customer, measured when an alert actually goes out |
+| `notifications` (`notifications_total`) by type, outcome: new notifications, duplicates excluded | counter | Usage per week. Not `notifications.created`: Prometheus reserves the `_created` suffix |
+| `distribution.config.changes` (`distribution_config_changes_total`) by operation (`LIST_CREATED`, `LIST_UPDATED`, `LIST_DEACTIVATED`, `MEMBER_ADDED`, `MEMBER_REMOVED`) | counter | Customer engagement with self-service. A request that changes nothing is not counted |
 
 ### 13.2 Performance
 
-| Metric | Type | Proposed target |
+| Metric (Prometheus) | Type | Proposed target |
 |---|---|---|
-| `http.server.requests` for `POST /notifications` | timer | p95 < 300 ms |
-| `notification.delivery.latency` (`sent_at − notification.created_at`) | timer | p99 < 5 min |
-| `notification.deliveries` by channel, status, error_code | counter | Success rate ≥ 99 % |
-| `notification.delivery.attempts` per delivery | distribution summary | Mostly 1 |
-| `notification.deliveries.pending` / `…pending.oldest.age` | gauge | Alert if oldest > 30 min |
-| `notification.channel.send` by channel | timer | Provider health |
+| `http.server.requests` (`http_server_requests_seconds`) for `POST /notifications`, with percentile histogram | timer | p95 < 300 ms |
+| `notification.delivery.latency` (`notification_delivery_latency_seconds`) by channel: `sent_at` − the delivery's acceptance time (its notification's `created_at`), with percentile histogram | timer | p99 < 5 min |
+| `notification.deliveries` (`notification_deliveries_total`) by channel, status (`SENT`/`FAILED`), error_code (the last attempt's, `NONE` when sent) | counter | Success rate ≥ 99 % |
+| `notification.delivery.attempts` (`notification_delivery_attempts`) by channel, status, per finished delivery | distribution summary | Mostly 1 |
+| `notification.deliveries.pending` / `notification.deliveries.pending.oldest.age` (`…_pending`, `…_pending_oldest_age_seconds`) | gauge | Alert if oldest > 30 min |
+| `notification.channel.send` (`notification_channel_send_seconds`) by channel, outcome, with percentile histogram | timer | Provider health |
+
+The gauges query the database at each scrape (small queries: the pending rows are covered by a partial index and are few when the dispatcher keeps up; active lists number one per customer and channel). Their values are database-wide, so every instance reports the same: aggregate them with `max`, not `sum`. `distribution.lists.active` has one series per notification type and channel; types come from Liquibase, so the ones present at startup are all there are.
+
+Dispatch metrics are recorded while the delivery's transaction is still open. If the final flush fails (rare: the row is locked), an attempt can be counted that is then rolled back and retried.
 
 ## 14. Acceptance criteria
 

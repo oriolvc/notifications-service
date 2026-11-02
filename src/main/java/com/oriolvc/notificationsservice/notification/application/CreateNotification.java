@@ -40,6 +40,7 @@ public class CreateNotification {
     private final RecipientResolver recipientResolver;
     private final NotificationRepository notificationRepository;
     private final ApplicationEventPublisher events;
+    private final NotificationMetrics metrics;
     private final Clock clock;
 
     CreateNotification(
@@ -48,12 +49,14 @@ public class CreateNotification {
             final RecipientResolver recipientResolver,
             final NotificationRepository notificationRepository,
             final ApplicationEventPublisher events,
+            final NotificationMetrics metrics,
             final Clock clock) {
         this.notificationTypeRepository = notificationTypeRepository;
         this.parametersValidator = parametersValidator;
         this.recipientResolver = recipientResolver;
         this.notificationRepository = notificationRepository;
         this.events = events;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -79,12 +82,15 @@ public class CreateNotification {
         // Deduplication is the unique constraint's job: duplicates come back flagged, in the same order
         final List<SavedNotification> saved = notificationRepository.saveAllIfAbsent(notifications);
 
-        final List<Long> accepted = saved.stream()
+        final List<Notification> created = saved.stream()
                 .filter(result -> !result.duplicate())
                 .map(SavedNotification::notification)
+                .toList();
+        final List<Long> accepted = created.stream()
                 .filter(notification -> notification.outcome() == NotificationOutcome.ACCEPTED)
                 .map(Notification::id)
                 .toList();
+        recordMetrics(type.code(), created, accepted.size());
         if (!accepted.isEmpty()) {
             // The repository has committed: the dispatcher can pick the deliveries up
             events.publishEvent(new NotificationsAccepted(accepted));
@@ -98,6 +104,15 @@ public class CreateNotification {
         return new CreateNotificationResult(
                 eventKey.value(),
                 saved.stream().map(CreateNotification::toResult).toList());
+    }
+
+    /** A replayed event is not counted again. */
+    private void recordMetrics(final String type, final List<Notification> created, final int accepted) {
+        if (created.isEmpty()) {
+            return;
+        }
+        created.forEach(notification -> metrics.notificationCreated(type, notification));
+        metrics.customersReached(type, (double) accepted / created.size());
     }
 
     private static CustomerResult toResult(final SavedNotification saved) {

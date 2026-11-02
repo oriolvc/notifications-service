@@ -128,6 +128,7 @@ class EmailChannelSenderTest {
                 address,
                 1,
                 new RenderedMessage("FDA warning letter – Qualifyze Spain", "Qualifyze Spain, …"),
+                Instant.parse("2026-11-02T10:00:00Z"),
                 DeliveryStatus.PENDING,
                 Instant.parse("2026-11-02T10:00:00Z"),
                 null,

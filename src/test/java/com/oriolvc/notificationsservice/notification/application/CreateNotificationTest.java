@@ -43,6 +43,7 @@ class CreateNotificationTest {
     private final List<Violation> violations = new ArrayList<>();
     private final FakeNotifications notifications = new FakeNotifications();
     private final List<Object> events = new ArrayList<>();
+    private final RecordingNotificationMetrics metrics = new RecordingNotificationMetrics();
     private final CreateNotification createNotification = new CreateNotification(
             types,
             (schema, parameters) -> List.copyOf(violations),
@@ -51,6 +52,7 @@ class CreateNotificationTest {
                     : List.of(),
             notifications,
             events::add,
+            metrics,
             Clock.fixed(Instant.parse("2026-11-02T10:00:00Z"), ZoneOffset.UTC));
 
     @Test
@@ -63,12 +65,18 @@ class CreateNotificationTest {
                         tuple(103L, CustomerOutcome.NO_RECIPIENTS, 0), tuple(101L, CustomerOutcome.ACCEPTED, 1));
         assertThat(result.anyCreated()).isTrue();
         assertThat(events).containsExactly(new NotificationsAccepted(List.of(2L)));
+        assertThat(metrics.recorded)
+                .containsExactly(
+                        "created REGULATORY_DOCUMENT_MATCHED NO_RECIPIENTS to 0",
+                        "created REGULATORY_DOCUMENT_MATCHED ACCEPTED to 1",
+                        "reached REGULATORY_DOCUMENT_MATCHED 0.5");
     }
 
     @Test
     void duplicatesAreReportedWithTheStoredNotificationAndPublishNothing() {
         final CreateNotificationResult first = createNotification.execute(command(List.of(101L)));
         events.clear();
+        metrics.recorded.clear();
 
         final CreateNotificationResult second = createNotification.execute(command(List.of(101L)));
 
@@ -78,6 +86,7 @@ class CreateNotificationTest {
                         101, first.results().getFirst().notificationId(), CustomerOutcome.DUPLICATE, 1));
         assertThat(second.anyCreated()).isFalse();
         assertThat(events).isEmpty();
+        assertThat(metrics.recorded).as("a replayed event is not counted again").isEmpty();
     }
 
     @Test

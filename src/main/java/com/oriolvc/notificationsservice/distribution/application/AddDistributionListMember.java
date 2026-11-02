@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.AddDistributionListMemberCommand;
 import com.oriolvc.notificationsservice.distribution.application.model.MemberView;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
@@ -13,11 +14,15 @@ import org.springframework.stereotype.Service;
 public class AddDistributionListMember {
 
     private final DistributionListRepository distributionListRepository;
+    private final DistributionMetrics metrics;
     private final AddressValidators addressValidators;
 
     AddDistributionListMember(
-            final DistributionListRepository distributionListRepository, final AddressValidators addressValidators) {
+            final DistributionListRepository distributionListRepository,
+            final AddressValidators addressValidators,
+            final DistributionMetrics metrics) {
         this.distributionListRepository = distributionListRepository;
+        this.metrics = metrics;
         this.addressValidators = addressValidators;
     }
 
@@ -28,6 +33,7 @@ public class AddDistributionListMember {
         final Member added =
                 distributionList.addMember(command.address(), addressValidators.forChannel(distributionList.channel()));
         final DistributionList saved = distributionListRepository.save(distributionList);
+        metrics.configChanged(ConfigChange.MEMBER_ADDED);
         return MemberViews.of(saved.memberWithAddress(added.address()).orElseThrow());
     }
 }

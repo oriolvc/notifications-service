@@ -14,8 +14,10 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
@@ -24,16 +26,33 @@ class DispatchDueDeliveriesTest {
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-11-02T10:00:00Z"), ZoneOffset.UTC);
 
+    private final RecordingNotificationMetrics metrics = new RecordingNotificationMetrics();
+
     @Test
     void attemptsEveryDueDeliveryWithTheSenderOfItsChannel() {
         final FakeDeliveries deliveries = new FakeDeliveries(delivery(1), delivery(2));
         final DispatchDueDeliveries dispatch =
-                new DispatchDueDeliveries(deliveries, senders(delivery -> SendResult.success("<m>")), CLOCK);
+                new DispatchDueDeliveries(deliveries, senders(delivery -> SendResult.success("<m>")), metrics, CLOCK);
 
         assertThat(dispatch.execute()).isEqualTo(2);
         assertThat(deliveries.attempted)
                 .extracting(Delivery::status)
                 .containsExactly(DeliveryStatus.SENT, DeliveryStatus.SENT);
+        assertThat(metrics.recorded)
+                .containsExactly("sent EMAIL SUCCESS", "completed 1 SENT", "sent EMAIL SUCCESS", "completed 2 SENT");
+    }
+
+    @Test
+    void aDeliveryLeftPendingForARetryIsNotCompleted() {
+        final DispatchDueDeliveries dispatch = new DispatchDueDeliveries(
+                new FakeDeliveries(delivery(1)),
+                senders(delivery -> SendResult.retryable("CONNECTION", "refused")),
+                metrics,
+                CLOCK);
+
+        dispatch.execute();
+
+        assertThat(metrics.recorded).containsExactly("sent EMAIL RETRYABLE_ERROR");
     }
 
     @Test
@@ -44,6 +63,7 @@ class DispatchDueDeliveriesTest {
                 senders(delivery -> {
                     throw new IllegalStateException("bug in a sender");
                 }),
+                metrics,
                 CLOCK);
 
         assertThat(dispatch.execute()).isZero();
@@ -89,6 +109,7 @@ class DispatchDueDeliveriesTest {
                 "member" + id + "@customer101.example",
                 1,
                 new RenderedMessage("subject", "body"),
+                CLOCK.instant(),
                 DeliveryStatus.PENDING,
                 CLOCK.instant(),
                 null,
@@ -115,6 +136,16 @@ class DispatchDueDeliveriesTest {
             attempt.accept(next);
             attempted.add(queue.removeFirst());
             return true;
+        }
+
+        @Override
+        public long countPending() {
+            return queue.size();
+        }
+
+        @Override
+        public Optional<Instant> oldestPendingCreatedAt() {
+            return queue.stream().map(Delivery::createdAt).min(Comparator.naturalOrder());
         }
     }
 }

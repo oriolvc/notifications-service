@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.CreateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
@@ -15,14 +16,17 @@ import org.springframework.stereotype.Service;
 public class CreateDistributionList {
 
     private final DistributionListRepository distributionListRepository;
+    private final DistributionMetrics metrics;
     private final NotificationTypeQuery notificationTypes;
     private final DistributionListViews views;
 
     CreateDistributionList(
             final DistributionListRepository distributionListRepository,
             final NotificationTypeQuery notificationTypes,
-            final DistributionListViews views) {
+            final DistributionListViews views,
+            final DistributionMetrics metrics) {
         this.distributionListRepository = distributionListRepository;
+        this.metrics = metrics;
         this.notificationTypes = notificationTypes;
         this.views = views;
     }
@@ -36,6 +40,8 @@ public class CreateDistributionList {
         // Duplicate names and a second active list are rejected by the unique constraints (409)
         final DistributionList distributionList = DistributionList.create(
                 command.tenantId(), DistributionList.normalizeName(command.name()), type.id(), command.channel());
-        return views.of(distributionListRepository.save(distributionList));
+        final DistributionList saved = distributionListRepository.save(distributionList);
+        metrics.configChanged(ConfigChange.LIST_CREATED);
+        return views.of(saved);
     }
 }

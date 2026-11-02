@@ -2,6 +2,7 @@ package com.oriolvc.notificationsservice.notification.application;
 
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryRepository;
+import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import com.oriolvc.notificationsservice.notification.domain.SendResult;
 import java.time.Clock;
 import org.slf4j.Logger;
@@ -20,12 +21,17 @@ public class DispatchDueDeliveries {
 
     private final DeliveryRepository deliveryRepository;
     private final ChannelSenders senders;
+    private final NotificationMetrics metrics;
     private final Clock clock;
 
     DispatchDueDeliveries(
-            final DeliveryRepository deliveryRepository, final ChannelSenders senders, final Clock clock) {
+            final DeliveryRepository deliveryRepository,
+            final ChannelSenders senders,
+            final NotificationMetrics metrics,
+            final Clock clock) {
         this.deliveryRepository = deliveryRepository;
         this.senders = senders;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -44,8 +50,12 @@ public class DispatchDueDeliveries {
     }
 
     private void attempt(final Delivery delivery) {
-        final SendResult result = senders.forChannel(delivery.channel()).send(delivery);
+        final ChannelSender sender = senders.forChannel(delivery.channel());
+        final SendResult result = metrics.timeSend(delivery.channel(), () -> sender.send(delivery));
         delivery.recordAttempt(result, clock.instant());
+        if (delivery.status() != DeliveryStatus.PENDING) {
+            metrics.deliveryCompleted(delivery);
+        }
         log.info(
                 "Delivery {} attempt {}: {} {}, now {}",
                 delivery.id(),

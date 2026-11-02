@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.application;
 
+import com.oriolvc.notificationsservice.distribution.application.DistributionMetrics.ConfigChange;
 import com.oriolvc.notificationsservice.distribution.application.model.DistributionListView;
 import com.oriolvc.notificationsservice.distribution.application.model.UpdateDistributionListCommand;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
@@ -11,11 +12,15 @@ import org.springframework.stereotype.Service;
 public class UpdateDistributionList {
 
     private final DistributionListRepository distributionListRepository;
+    private final DistributionMetrics metrics;
     private final DistributionListViews views;
 
     UpdateDistributionList(
-            final DistributionListRepository distributionListRepository, final DistributionListViews views) {
+            final DistributionListRepository distributionListRepository,
+            final DistributionListViews views,
+            final DistributionMetrics metrics) {
         this.distributionListRepository = distributionListRepository;
+        this.metrics = metrics;
         this.views = views;
     }
 
@@ -35,6 +40,10 @@ public class UpdateDistributionList {
         } else if (Boolean.FALSE.equals(command.active())) {
             distributionList.deactivate();
         }
-        return views.of(distributionListRepository.save(distributionList));
+        final DistributionList saved = distributionListRepository.save(distributionList);
+        if (saved.version() != distributionList.version()) {
+            metrics.configChanged(ConfigChange.LIST_UPDATED);
+        }
+        return views.of(saved);
     }
 }

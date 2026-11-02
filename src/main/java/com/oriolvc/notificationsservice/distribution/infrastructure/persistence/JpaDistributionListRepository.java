@@ -2,6 +2,7 @@ package com.oriolvc.notificationsservice.distribution.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.distribution.domain.DistributionList;
 import com.oriolvc.notificationsservice.distribution.domain.DistributionListRepository;
+import com.oriolvc.notificationsservice.shared.domain.Channel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import java.util.List;
@@ -70,5 +71,10 @@ class JpaDistributionListRepository implements DistributionListRepository {
                 .filter(dbo -> dbo.getVersion() == distributionList.version())
                 .orElseThrow(() ->
                         new ObjectOptimisticLockingFailureException(DistributionListDbo.class, distributionList.id()));
+    }
+
+    @Override
+    public long countActive(final long notificationTypeId, final Channel channel) {
+        return dao.countByNotificationTypeIdAndChannelAndActiveTrue(notificationTypeId, channel);
     }
 }

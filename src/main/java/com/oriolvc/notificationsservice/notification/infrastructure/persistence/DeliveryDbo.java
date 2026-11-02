@@ -182,6 +182,10 @@ class DeliveryDbo {
         return providerMessageId;
     }
 
+    Instant getCreatedAt() {
+        return createdAt;
+    }
+
     List<DeliveryAttemptDbo> getAttempts() {
         return attempts;
     }

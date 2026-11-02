@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.distribution.infrastructure.persistence;
 
+import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,6 @@ interface DistributionListDao extends JpaRepository<DistributionListDbo, Long> {
     /** At most one per channel (A-13). */
     List<DistributionListDbo> findAllByCustomerIdAndNotificationTypeIdAndActiveTrue(
             long customerId, long notificationTypeId);
+
+    long countByNotificationTypeIdAndChannelAndActiveTrue(long notificationTypeId, Channel channel);
 }
