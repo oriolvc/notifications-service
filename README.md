@@ -150,6 +150,77 @@ Open questions for the product owner, each with its current answer, are in RFC �
 | `MAIL_HOST`, `MAIL_PORT` (587), `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP relay and sender |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI`, `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES`, `NOTIFICATIONS_SECURITY_JWT_ISSUER` | JWT validation |
 
+## Extending it: new reports, templates and notification types
+
+Notification types are data, not code (RFC D-1). Each type has:
+- **parameters:** a JSON Schema file in `src/main/resources/schemas/`, shared by the API contract and runtime validation;
+- **templates:** one per channel, stored in `notification_templates`;
+- **a variant in the OpenAPI spec:** it `$ref`s the schema file.
+
+Rendering follows the schema (RFC §8), so none of the changes below needs Java code in the use cases:
+- a `format: date` property renders as `12 June 2026`;
+- a `oneOf` of `const`/`title` values renders as the `title`.
+
+Types and templates change through Liquibase migrations, which also serve as their audit trail (D-6). **Never edit an applied changeset or schema file; add new ones.**
+
+### A new kind of regulatory document
+
+For example, an FDA *import alert* next to warning letters, OAIs and non-compliance reports:
+
+1. Copy `regulatory-document-matched.v1.json` to `…v2.json` and add the value. Its `title` is what the email shows:
+
+   ```json
+   { "const": "IMPORT_ALERT", "title": "import alert" }
+   ```
+
+2. Add a changeset that stores v2 as the type's `parameters_schema`. Load the file through a staging table, as `002-seed-regulatory-document-matched.yaml` does, because a file can't be bound to `jsonb` directly.
+3. Point `RegulatoryDocumentMatchedParameters` in the spec at the v2 file.
+
+The result:
+- The publisher can send `"documentType": "IMPORT_ALERT"`, and the email reads "…received a FDA import alert on…".
+- Stored notifications keep the parameters they were accepted with.
+- Event keys are computed from the type and the parameters, not the schema version, so no past event is notified again.
+
+A compatible change like this one (an added value, an optional field) belongs in `vN+1`. A breaking change (a new required field) is better as a new type, so existing callers keep working.
+
+### A different wording or subject
+
+Add a changeset that updates the row in `notification_templates` for that type and channel. This is how open questions Q-3 and Q-4 would be resolved (RFC §17).
+
+- **Placeholders:** `{{name}}` for any top-level parameter. If a placeholder isn't in the type's schema, the application refuses to start (`TemplateCatalogCheck`), rather than sending emails with blanks.
+- **Content already rendered stays as it was.** Each delivery keeps its own rendered content (D-7): emails already sent show exactly what each recipient received, and deliveries still pending go out as they were rendered at acceptance.
+- **Nothing is resent.** The event key doesn't depend on the template, so a wording change doesn't count as a new event.
+
+### A new notification type
+
+For example, `AUDIT_REPORT_PUBLISHED` for a different kind of event:
+
+1. **Schema:** `src/main/resources/schemas/audit-report-published.v1.json` with the parameters, `additionalProperties: false`, and `format: date` or `oneOf` `const`/`title` wherever a value should render nicely.
+2. **Changeset:** inserts the `notification_types` row (code, name, schema) and one `notification_templates` row per channel (an EMAIL template needs a subject).
+3. **Spec:** add a request variant to the `CreateNotificationRequest` `oneOf` and its entry in the discriminator `mapping`.
+   - From the second variant on, the generator produces an interface with one class per variant instead of a single class (RFC §6.3).
+   - The web mapper reads only `type`, `customerIds` and `parameters`, so that mapping is the one place that adapts, once.
+4. **Customers subscribe:** distribution lists are per type and channel, so each customer creates a list for `AUDIT_REPORT_PUBLISHED` through the existing API. No new endpoints are needed.
+
+Everything downstream is generic and works for the new type unchanged:
+- validation, normalization, the event key and deduplication;
+- recipient resolution, dispatch, retries, tracking and metrics (tagged by type).
+
+To retire a type, set it inactive in a changeset. New events are then rejected with 422, and its history stays readable.
+
+### What catches a mistake
+
+| Mistake | Caught by |
+|---|---|
+| Spec variant, schema file and database row out of sync | `ContractDriftIntegrationTest` (in `verify`) |
+| Template placeholder not in the schema | Startup check: the application doesn't start |
+| A response that no longer matches the spec | The OpenAPI validation in every integration test |
+| An edited, already-applied changeset or schema file | Liquibase checksum error at startup |
+
+### A new channel
+
+The same pattern applies (RFC §4): add a `Channel` value, a `ChannelSender`, an `AddressValidator`, a changeset that extends the channel `CHECK` constraints, and a template per type. The use cases, dispatcher and tracking stay as they are.
+
 ## Acceptance criteria → tests
 
 The ACs are defined in RFC §14. Test classes are under `src/test/java/com/oriolvc/notificationsservice/`, and each test carries its AC id in `@DisplayName`.
