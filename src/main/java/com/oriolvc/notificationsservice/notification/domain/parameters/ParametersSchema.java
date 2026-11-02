@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.notification.domain;
+package com.oriolvc.notificationsservice.notification.domain.parameters;
 
 import java.util.Objects;
 import java.util.Optional;

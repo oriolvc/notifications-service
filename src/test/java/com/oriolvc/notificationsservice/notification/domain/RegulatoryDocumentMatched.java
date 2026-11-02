@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.domain;
 
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersSchema;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.io.IOException;
 import java.io.UncheckedIOException;

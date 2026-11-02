@@ -5,7 +5,7 @@ import static com.oriolvc.notificationsservice.notification.domain.RegulatoryDoc
 import static com.oriolvc.notificationsservice.notification.domain.RegulatoryDocumentMatched.sampleParameters;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.oriolvc.notificationsservice.notification.domain.ParametersSchema;
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersSchema;
 import com.oriolvc.notificationsservice.shared.error.Violation;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

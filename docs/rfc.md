@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Author | Oriol Vaquer |
-| Status | v3, implemented (tasks T0–T11 in `docs/tasks.md`) |
+| Status | v3, implemented (tasks T0–T12 in `docs/tasks.md`) |
 | Date | 2026-11-02 |
 | Stack | Java 25 · Spring Boot 4 · Liquibase 5 · PostgreSQL 18 |
 

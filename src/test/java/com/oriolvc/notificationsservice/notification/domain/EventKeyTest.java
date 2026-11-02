@@ -6,6 +6,8 @@ import static com.oriolvc.notificationsservice.notification.domain.RegulatoryDoc
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.oriolvc.notificationsservice.notification.domain.parameters.CanonicalJson;
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParameterNormalizer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;

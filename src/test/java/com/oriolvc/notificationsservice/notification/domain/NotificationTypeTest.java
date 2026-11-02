@@ -6,6 +6,7 @@ import static com.oriolvc.notificationsservice.notification.domain.RegulatoryDoc
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersSchema;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

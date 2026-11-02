@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.notification.domain;
+package com.oriolvc.notificationsservice.notification.domain.parameters;
 
 import com.oriolvc.notificationsservice.shared.error.Violation;
 import java.util.List;

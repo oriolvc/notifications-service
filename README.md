@@ -7,7 +7,7 @@ Built for the Qualifyze Backend Chapter Lead challenge (`docs/challenge.md`).
 | Doc | What's in it |
 |---|---|
 | [`docs/rfc.md`](docs/rfc.md) | The design: assumptions, API, data model, dispatch, security threat assessment, metrics, acceptance criteria, decisions, open questions |
-| [`docs/tasks.md`](docs/tasks.md) | How it was built, one task per PR (T0–T11) |
+| [`docs/tasks.md`](docs/tasks.md) | How it was built, one task per PR (T0–T12) |
 | [`src/main/resources/openapi/notifications-service.yaml`](src/main/resources/openapi/notifications-service.yaml) | The API contract (OpenAPI 3.1), source of the generated interfaces and DTOs |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions and architecture rules for contributors |
 

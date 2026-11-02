@@ -4,7 +4,7 @@ One task = one branch = one PR. Design reference: `docs/rfc.md`. Conventions: `C
 
 ```
 T0 Bootstrap ─▶ T1 API contract ─▶ T2 DB schema ─▶ T3 Shared kernel ─┬─▶ T4 Distribution lists ─▶ T5 Members ─┐
-                                                                     │                                       ├─▶ T7 Create notification ─▶ T8 Dispatch ─▶ T9 Tracking queries ─▶ T10 Metrics ─▶ T11 Submission
+                                                                     │                                       ├─▶ T7 Create notification ─▶ T8 Dispatch ─▶ T9 Tracking queries ─▶ T10 Metrics ─▶ T11 Cleanup ─▶ T12 Submission
                                                                      └─▶ T6 Notification domain ─────────────┘
 ```
 
@@ -202,7 +202,16 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** all metrics in RFC §13 are exposed and tested.
 
-## [x] T11 — Hardening and submission
+## [ ] T11 — Cleanup and simplification
+
+**Goal:** a codebase that is easier to navigate and review before submission, with no change in behaviour.
+
+- Group the notification domain's parameter code (schema, validation port, normalization, canonical JSON, the 422 exception) in a `parameters` package.
+- Further cleanups as agreed during the task.
+
+**Done when:** `./mvnw verify` is green with the same tests, and the API, schema and RFC behaviour are unchanged.
+
+## [x] T12 — Hardening and submission
 
 **Goal:** a submission a reviewer can run and understand in 10 minutes.
 

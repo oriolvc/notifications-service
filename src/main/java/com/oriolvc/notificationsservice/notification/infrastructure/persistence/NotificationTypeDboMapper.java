@@ -1,8 +1,8 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.persistence;
 
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
-import com.oriolvc.notificationsservice.notification.domain.ParametersSchema;
 import com.oriolvc.notificationsservice.notification.domain.Template;
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersSchema;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import tools.jackson.databind.json.JsonMapper;

@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.notification.domain;
 
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParametersSchema;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;

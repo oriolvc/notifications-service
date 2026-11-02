@@ -1,5 +1,7 @@
 package com.oriolvc.notificationsservice.notification.domain;
 
+import com.oriolvc.notificationsservice.notification.domain.parameters.CanonicalJson;
+import com.oriolvc.notificationsservice.notification.domain.parameters.ParameterNormalizer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

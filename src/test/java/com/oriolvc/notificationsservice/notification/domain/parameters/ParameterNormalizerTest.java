@@ -1,4 +1,4 @@
-package com.oriolvc.notificationsservice.notification.domain;
+package com.oriolvc.notificationsservice.notification.domain.parameters;
 
 import static com.oriolvc.notificationsservice.notification.domain.RegulatoryDocumentMatched.json;
 import static org.assertj.core.api.Assertions.assertThat;
