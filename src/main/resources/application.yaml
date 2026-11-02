@@ -16,6 +16,23 @@ spring:
   # The local and test profiles use a dev key pair instead (keys/local-jwt-public.pem).
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  # SMTP relay. Timeouts bound how long a delivery's row lock is held during a send (RFC 9).
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+notifications:
+  mail:
+    from: ${MAIL_FROM}
+  dispatch:
+    enabled: true
+    poll-interval: 10s
 
 logging:
   pattern:

@@ -4,6 +4,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/notifications
     username: notifications
     password: notifications
+  # Mailpit from docker-compose.yml; UI at http://localhost:8025
+  mail:
+    host: localhost
+    port: 1025
   security:
     oauth2:
       resourceserver:
@@ -13,6 +17,8 @@ spring:
           audiences: notifications-service
 
 notifications:
+  mail:
+    from: notifications@localhost
   security:
     jwt:
       issuer: http://localhost/local-issuer

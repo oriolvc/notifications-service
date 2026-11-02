@@ -1,4 +1,7 @@
 spring:
+  # GreenMail; its port is registered by GreenMailConfiguration
+  mail:
+    host: 127.0.0.1
   security:
     oauth2:
       resourceserver:
@@ -8,6 +11,11 @@ spring:
           audiences: notifications-service
 
 notifications:
+  mail:
+    from: notifications@test.example
+  # Tests run DispatchDueDeliveries themselves
+  dispatch:
+    enabled: false
   security:
     jwt:
       issuer: http://localhost/local-issuer

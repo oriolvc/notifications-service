@@ -350,7 +350,7 @@ Result:
 ## 9. Dispatch
 
 - `notification_deliveries` with `status = PENDING` is the **work queue**. The deliveries are written in the same transaction as the notification, so no event can be lost between acceptance and sending.
-- **Dispatcher:** runs `@Scheduled(fixedDelay = 10s)` and is also triggered after each notification commit for low latency: the create use case publishes `NotificationsAccepted` once the repository call has committed (transactions live in the repository adapters, so a plain event listener already runs after commit). Each delivery is processed in its own transaction:
+- **Dispatcher:** runs `@Scheduled(fixedDelay = 10s)` and is also triggered after each notification commit for low latency: the create use case publishes `NotificationsAccepted` once the repository call has committed (transactions live in the repository adapters, so a plain event listener already runs after commit). The listener is `@Async`, so the `POST` does not wait for SMTP. Both triggers can be switched off (`notifications.dispatch.enabled=false`); the tests do that and run `DispatchDueDeliveries` synchronously. Each delivery is processed in its own transaction:
   ```sql
   SELECT * FROM notification_deliveries
   WHERE status = 'PENDING' AND next_attempt_at <= now()
@@ -358,11 +358,13 @@ Result:
   LIMIT 1 FOR UPDATE SKIP LOCKED;
   ```
   `SKIP LOCKED` makes it safe with several instances. If an instance crashes, its transaction rolls back and the lock is released, so no stuck-delivery detection is needed.
-- **Send:** `EmailChannelSender` (Spring `JavaMailSender`, SMTP), one message per recipient. `Message-ID` is stored as `provider_message_id`.
+  Since transactions belong to the repository adapters, that transaction is one repository call: `DeliveryRepository.attemptNextDue(now, attempt)` locks the row, hands the `Delivery` to the use case's callback (send through the channel's `ChannelSender`, then `delivery.recordAttempt(result, now)`), and stores the new state and attempt before committing. The use case loops until nothing is due; if a callback throws, the transaction rolls back, the delivery stays due and the run stops (no hot loop on the same delivery). After the notification is accepted, a `Delivery` is dispatched on its own: the notification itself never changes.
+- **Send:** `EmailChannelSender` (Spring `JavaMailSender`, SMTP), one plain-text message per recipient, from `notifications.mail.from`. `Message-ID` is stored as `provider_message_id`. SMTP connect/read/write timeouts (5 s / 10 s / 10 s) bound how long a row lock is held.
 - **Outcome handling:** every attempt is appended to `delivery_attempts`.
   - Success → `SENT`, `sent_at`.
-  - Retryable error (connection error, timeout, SMTP 4xx) → stays `PENDING`, `attempt_count++`, `next_attempt_at` = now + backoff (1, 5, 15, 60 min).
-  - Permanent error (SMTP 5xx, e.g. unknown mailbox) or 5 attempts reached → `FAILED`.
+  - Retryable error (connection error, timeout, SMTP 4xx, SMTP authentication failure, anything unrecognised) → stays `PENDING`, `attempt_count++`, `next_attempt_at` = now + backoff (1, 5, 15, 60 min).
+  - Permanent error (SMTP 5xx, e.g. unknown mailbox; an address or message the mail library cannot build) or 5 attempts reached → `FAILED`.
+  - `error_code` is short and stable: `SMTP_<reply code>`, `CONNECTION`, `SMTP_AUTHENTICATION`, `INVALID_MESSAGE`, `UNKNOWN`. `error_message` keeps the provider's text (at most 1000 characters) for the audit trail; logs carry the delivery id, outcome and error code only.
 - **Guarantee:** at-least-once. If the process dies after the SMTP server accepts the message but before commit, the email can be sent twice. This is accepted at this volume and documented.
 - Holding a DB transaction during an SMTP call (≈100 ms–1 s) is acceptable for a few hundred messages a week. Revisit if volume grows (D-3).
 
@@ -556,7 +558,7 @@ Exposed with Micrometer through `/actuator/prometheus`.
 ## 15. Testing strategy
 
 - **Unit (domain/application):** schema validation, normalization and event key, renderer and formatting, retry/backoff policy, aggregate invariants, use cases with fake ports.
-- **Integration:** `@SpringBootTest` + **Testcontainers `postgres:18`** + **GreenMail** (SMTP, including failure simulation) + `spring-security-test` JWTs. Covers each AC above end to end through the HTTP API.
+- **Integration:** `@SpringBootTest` + **Testcontainers `postgres:18`** + **GreenMail** (SMTP; outages simulated by pointing the mail sender at a closed port, SMTP 4xx/5xx replies by a small scripted SMTP server, since GreenMail accepts every recipient) + `spring-security-test` JWTs. Covers each AC above end to end through the HTTP API.
 - **Contract:** the drift guard from §6.3 (DB types ↔ spec variants ↔ schema files). Request/response validation against the OpenAPI spec in integration tests (e.g. `swagger-request-validator`).
 - **Fixtures:** the notification type and template are seeded by the main Liquibase changelog. Test data (customers' lists and members) lives in a Liquibase `test` context plus `@Sql` scripts under `src/test/resources/fixtures`, so tests run on a clean database.
 - **Coverage:** JaCoCo `check` goal, **line coverage ≥ 90 %**; the build fails below it. Generated OpenAPI DTOs are excluded.

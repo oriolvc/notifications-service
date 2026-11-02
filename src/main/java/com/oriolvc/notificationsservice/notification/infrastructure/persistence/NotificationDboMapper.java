@@ -1,6 +1,7 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.persistence;
 
 import com.oriolvc.notificationsservice.notification.domain.Delivery;
+import com.oriolvc.notificationsservice.notification.domain.DeliveryAttempt;
 import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.RenderedMessage;
@@ -35,8 +36,29 @@ final class NotificationDboMapper {
                 dbo.getTemplateId(),
                 new RenderedMessage(dbo.getSubject(), dbo.getBody()),
                 dbo.getStatus(),
-                dbo.getAttemptCount(),
-                dbo.getNextAttemptAt());
+                dbo.getNextAttemptAt(),
+                dbo.getSentAt(),
+                dbo.getProviderMessageId(),
+                dbo.getAttempts().stream()
+                        .map(attempt -> new DeliveryAttempt(
+                                attempt.getAttemptNumber(),
+                                attempt.getAttemptedAt(),
+                                attempt.getOutcome(),
+                                attempt.getProviderMessageId(),
+                                attempt.getErrorCode(),
+                                attempt.getErrorMessage()))
+                        .toList());
+    }
+
+    static DeliveryAttemptDbo toDbo(final DeliveryAttempt attempt, final DeliveryDbo delivery) {
+        return new DeliveryAttemptDbo(
+                delivery,
+                attempt.attemptNumber(),
+                attempt.attemptedAt(),
+                attempt.outcome(),
+                attempt.providerMessageId(),
+                attempt.errorCode(),
+                attempt.errorMessage());
     }
 
     static DeliveryDbo toDbo(final Delivery delivery, final NotificationDbo notification) {

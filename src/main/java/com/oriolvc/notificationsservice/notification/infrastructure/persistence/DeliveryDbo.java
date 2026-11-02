@@ -2,6 +2,7 @@ package com.oriolvc.notificationsservice.notification.infrastructure.persistence
 
 import com.oriolvc.notificationsservice.notification.domain.DeliveryStatus;
 import com.oriolvc.notificationsservice.shared.domain.Channel;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -13,10 +14,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -74,6 +79,17 @@ class DeliveryDbo {
 
     @Column(name = "next_attempt_at", nullable = false)
     private Instant nextAttemptAt;
+
+    @Column(name = "sent_at")
+    private Instant sentAt;
+
+    @Column(name = "provider_message_id")
+    private String providerMessageId;
+
+    /** New attempts are persisted with the delivery when it is flushed. Append-only. */
+    @OneToMany(mappedBy = "delivery", cascade = CascadeType.PERSIST)
+    @OrderBy("attemptNumber")
+    private List<DeliveryAttemptDbo> attempts = new ArrayList<>();
 
     @Version
     @Column(name = "version", nullable = false)
@@ -156,5 +172,31 @@ class DeliveryDbo {
 
     Instant getNextAttemptAt() {
         return nextAttemptAt;
+    }
+
+    Instant getSentAt() {
+        return sentAt;
+    }
+
+    String getProviderMessageId() {
+        return providerMessageId;
+    }
+
+    List<DeliveryAttemptDbo> getAttempts() {
+        return attempts;
+    }
+
+    /** The dispatch state; everything else is fixed at creation. */
+    void setDispatchState(
+            final DeliveryStatus status,
+            final int attemptCount,
+            final Instant nextAttemptAt,
+            final Instant sentAt,
+            final String providerMessageId) {
+        this.status = status;
+        this.attemptCount = attemptCount;
+        this.nextAttemptAt = nextAttemptAt;
+        this.sentAt = sentAt;
+        this.providerMessageId = providerMessageId;
     }
 }

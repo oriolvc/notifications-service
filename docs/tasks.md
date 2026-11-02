@@ -168,7 +168,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 - **AC-9**: two parallel requests → one notification per customer
 - **AC-10**, **AC-11**, **AC-12** (via HTTP), **AC-16**
 
-## [ ] T8 — Dispatch and email channel
+## [x] T8 — Dispatch and email channel
 
 **Goal:** deliver `PENDING` deliveries with retries and full attempt history. RFC §9.
 

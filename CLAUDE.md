@@ -133,12 +133,12 @@ Rules:
 - **Unit** (domain and application): JUnit + AssertJ. Prefer hand-written fakes for ports over Mockito.
 - **Integration:** classes named `*IntegrationTest`, extending the `IntegrationTest` base, which provides:
   - Testcontainers `postgres:18` (singleton, `@ServiceConnection`)
-  - GreenMail
+  - GreenMail (`greenMail`, emptied before each test), plus `ScriptedSmtpServer` for SMTP 4xx/5xx replies
   - MockMvc, with `get`/`post`/`patch`/`delete` helpers that send a bearer token and `assertProblem(result, status, type)`
   - JWT helpers per role (`JwtTokens`: real tokens signed with the dev key, so the decoder and claim mapping are exercised)
   - validation of every exchange against the OpenAPI spec (`OpenApiContractMatcher`): responses always; requests unless the server rejected them with a 4xx; 501 stubs skipped. An undocumented status or body fails the test, so fix the spec or the code, never the matcher
 
-  Exercise the HTTP API end to end.
+  Exercise the HTTP API end to end. Dispatch triggers are off in tests (`notifications.dispatch.enabled=false`); call `DispatchDueDeliveries.execute()` and move `next_attempt_at` back instead of changing the clock.
 - **Fixtures:** `src/test/resources/fixtures/*.sql` loaded with `@Sql`. Each test starts from a clean DB (`CleanDatabaseTestExecutionListener` truncates everything but the Liquibase seed, before `@Sql` runs); never depend on test order.
 - Tests that prove an acceptance criterion carry its id: `@DisplayName("AC-5 same event posted twice is reported as duplicate")`.
 - **Coverage:** JaCoCo line coverage ≥ 90 % is enforced in `verify`; generated code and the `Application` class are excluded. Test behaviour, not getters.

@@ -2,6 +2,9 @@ package com.oriolvc.notificationsservice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.icegreen.greenmail.store.FolderException;
+import com.icegreen.greenmail.util.GreenMail;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -20,6 +23,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
  *
  * <ul>
  *   <li>Postgres 18 container, a Spring bean shared by every test class reusing the same cached context;
+ *   <li>{@link #greenMail}, the SMTP server, emptied before each test;
  *   <li>{@link #mvc} validating every exchange against the OpenAPI spec ({@link OpenApiContractMatcher}), and
  *       {@link #get}/{@link #post}/{@link #patch}/{@link #delete} helpers sending a bearer token;
  *   <li>a clean database before each test ({@link CleanDatabaseTestExecutionListener});
@@ -29,7 +33,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, OpenApiValidationConfiguration.class})
+@Import({TestcontainersConfiguration.class, GreenMailConfiguration.class, OpenApiValidationConfiguration.class})
 @TestExecutionListeners(
         listeners = CleanDatabaseTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
@@ -40,6 +44,14 @@ public abstract class IntegrationTest {
 
     @Autowired
     protected JdbcTemplate jdbc;
+
+    @Autowired
+    protected GreenMail greenMail;
+
+    @BeforeEach
+    void purgeMail() throws FolderException {
+        greenMail.purgeEmailFromAllMailboxes();
+    }
 
     protected static String bearer(final String token) {
         return JwtTokens.bearer(token);
