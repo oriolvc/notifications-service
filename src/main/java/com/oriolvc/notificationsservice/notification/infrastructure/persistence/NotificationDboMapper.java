@@ -4,6 +4,7 @@ import com.oriolvc.notificationsservice.notification.domain.Delivery;
 import com.oriolvc.notificationsservice.notification.domain.DeliveryAttempt;
 import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
+import com.oriolvc.notificationsservice.notification.domain.NotificationSummary;
 import com.oriolvc.notificationsservice.notification.domain.RenderedMessage;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -24,6 +25,17 @@ final class NotificationDboMapper {
                 dbo.getDeliveries().stream()
                         .map(NotificationDboMapper::toDomain)
                         .toList());
+    }
+
+    static NotificationSummary toSummary(final NotificationDbo dbo) {
+        return new NotificationSummary(
+                dbo.getId(),
+                dbo.getNotificationTypeId(),
+                new EventKey(dbo.getEventKey()),
+                dbo.getCustomerId(),
+                dbo.getOutcome(),
+                dbo.getCreatedAt(),
+                dbo.getCreatedBy());
     }
 
     static Delivery toDomain(final DeliveryDbo dbo) {

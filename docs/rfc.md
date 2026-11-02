@@ -189,8 +189,8 @@ Response **202 Accepted** (at least one new notification) or **200 OK** (all cus
 
 Duplicated `customerIds` are not an error: the generated DTO binds `uniqueItems` to a `Set`, so a customer listed twice is processed once.
 
-**`GET /notifications/{id}`**: notification, rendered content and per-recipient delivery status with attempts.
-**`GET /notifications?eventKey=…&customerId=…`**: search. Tenant users are always filtered to their own tenant.
+**`GET /notifications/{id}`**: notification, rendered content and per-recipient delivery status with attempts. Another tenant's notification → 404.
+**`GET /notifications?eventKey=…&customerId=…`**: search, newest first, at most 100 results (the filters narrow it; no paging is needed at this volume). Tenant users are always filtered to their own tenant; filtering by another tenant's `customerId` returns an empty result. Publishers (`NOTIFICATION_PUBLISHER`) read every tenant.
 
 ### 6.1.1 Errors
 

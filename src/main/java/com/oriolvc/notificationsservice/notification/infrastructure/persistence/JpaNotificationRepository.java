@@ -1,7 +1,9 @@
 package com.oriolvc.notificationsservice.notification.infrastructure.persistence;
 
+import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.NotificationRepository;
+import com.oriolvc.notificationsservice.notification.domain.NotificationSummary;
 import com.oriolvc.notificationsservice.notification.domain.SavedNotification;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
@@ -16,6 +18,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +96,31 @@ class JpaNotificationRepository implements NotificationRepository {
                     final long id = ids.get(notification);
                     return new SavedNotification(NotificationDboMapper.toDomain(rows.get(id)), duplicates.contains(id));
                 })
+                .toList();
+    }
+
+    @Override
+    public Optional<Notification> findById(final long id) {
+        return dao.findWithDeliveriesById(id).map(NotificationDboMapper::toDomain);
+    }
+
+    @Override
+    public List<NotificationSummary> search(final Long customerId, final EventKey eventKey, final int limit) {
+        Specification<NotificationDbo> criteria = Specification.unrestricted();
+        if (customerId != null) {
+            criteria = criteria.and((root, query, builder) -> builder.equal(root.get("customerId"), customerId));
+        }
+        if (eventKey != null) {
+            criteria = criteria.and((root, query, builder) -> builder.equal(root.get("eventKey"), eventKey.value()));
+        }
+        return dao
+                .findBy(
+                        criteria,
+                        query -> query.sortBy(Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")))
+                                .limit(limit)
+                                .all())
+                .stream()
+                .map(NotificationDboMapper::toSummary)
                 .toList();
     }
 }

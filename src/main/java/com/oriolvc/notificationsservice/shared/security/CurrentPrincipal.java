@@ -1,5 +1,6 @@
 package com.oriolvc.notificationsservice.shared.security;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -17,6 +18,14 @@ public record CurrentPrincipal(String userId, Long tenantId, Set<Role> roles) {
 
     public boolean hasRole(final Role role) {
         return roles.contains(role);
+    }
+
+    /**
+     * The tenant this caller's reads are limited to: none for a publisher, which works across tenants; the caller's own
+     * tenant for everyone else.
+     */
+    public Optional<Long> readScope() {
+        return hasRole(Role.NOTIFICATION_PUBLISHER) ? Optional.empty() : Optional.of(requireTenantId());
     }
 
     /** The tenant of a tenant-scoped caller. Tenant-scoped endpoints must only be reachable by such callers. */

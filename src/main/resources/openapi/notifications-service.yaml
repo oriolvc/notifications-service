@@ -99,6 +99,8 @@ paths:
         Publishers see every tenant. Tenant users only ever see notifications of their own tenant;
         filtering by another tenant's `customerId` returns an empty result.
 
+        Returns at most 100 notifications, newest first; narrow the search with the filters.
+
         **Required role:** `NOTIFICATION_PUBLISHER`, `DISTRIBUTION_LIST_ADMIN` or `NOTIFICATION_VIEWER`.
       x-required-roles: [NOTIFICATION_PUBLISHER, DISTRIBUTION_LIST_ADMIN, NOTIFICATION_VIEWER]
       parameters:
@@ -114,7 +116,7 @@ paths:
             $ref: '#/components/schemas/CustomerId'
       responses:
         '200':
-          description: Matching notifications, newest first.
+          description: Matching notifications, newest first, at most 100.
           content:
             application/json:
               schema:

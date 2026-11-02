@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-interface NotificationDao extends JpaRepository<NotificationDbo, Long> {
+interface NotificationDao extends JpaRepository<NotificationDbo, Long>, JpaSpecificationExecutor<NotificationDbo> {
 
     /**
      * Inserts the notification unless one exists for the same (type, event key, customer). The unique constraint
@@ -46,4 +47,7 @@ interface NotificationDao extends JpaRepository<NotificationDbo, Long> {
 
     @EntityGraph(attributePaths = "deliveries")
     List<NotificationDbo> findAllByIdIn(Collection<Long> ids);
+
+    @EntityGraph(attributePaths = "deliveries")
+    Optional<NotificationDbo> findWithDeliveriesById(long id);
 }

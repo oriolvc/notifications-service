@@ -185,6 +185,8 @@
                                 <!-- no class-level @Validated: Spring MVC validates parameters and raises HandlerMethodValidationException -->
                                 <useSpringBuiltInValidation>true</useSpringBuiltInValidation>
                                 <openApiNullable>false</openApiNullable>
+                                <!-- optional properties are absent, never null: the spec's types are not nullable -->
+                                <additionalModelTypeAnnotations>@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)</additionalModelTypeAnnotations>
                                 <annotationLibrary>none</annotationLibrary>
                                 <documentationProvider>none</documentationProvider>
                                 <skipDefaultInterface>false</skipDefaultInterface>

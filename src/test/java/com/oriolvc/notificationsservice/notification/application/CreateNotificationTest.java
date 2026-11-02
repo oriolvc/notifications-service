@@ -10,9 +10,11 @@ import com.oriolvc.notificationsservice.notification.application.model.CreateNot
 import com.oriolvc.notificationsservice.notification.application.model.CustomerOutcome;
 import com.oriolvc.notificationsservice.notification.application.model.CustomerResult;
 import com.oriolvc.notificationsservice.notification.application.model.NotificationsAccepted;
+import com.oriolvc.notificationsservice.notification.domain.EventKey;
 import com.oriolvc.notificationsservice.notification.domain.InvalidParametersException;
 import com.oriolvc.notificationsservice.notification.domain.Notification;
 import com.oriolvc.notificationsservice.notification.domain.NotificationRepository;
+import com.oriolvc.notificationsservice.notification.domain.NotificationSummary;
 import com.oriolvc.notificationsservice.notification.domain.NotificationType;
 import com.oriolvc.notificationsservice.notification.domain.NotificationTypeRepository;
 import com.oriolvc.notificationsservice.notification.domain.Recipient;
@@ -165,6 +167,18 @@ class CreateNotificationTest {
                         return new SavedNotification(saved, false);
                     })
                     .toList();
+        }
+
+        @Override
+        public Optional<Notification> findById(final long id) {
+            return stored.values().stream()
+                    .filter(notification -> notification.id() == id)
+                    .findFirst();
+        }
+
+        @Override
+        public List<NotificationSummary> search(final Long customerId, final EventKey eventKey, final int limit) {
+            throw new UnsupportedOperationException("Not used by CreateNotification");
         }
     }
 }

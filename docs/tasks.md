@@ -183,7 +183,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 
 **Done when:** **AC-1** end to end, plus **AC-13**, **AC-14** and **AC-15**.
 
-## [ ] T9 — Tracking queries
+## [x] T9 — Tracking queries
 
 **Goal:** read side for tracking and audit. RFC §6.1.
 
