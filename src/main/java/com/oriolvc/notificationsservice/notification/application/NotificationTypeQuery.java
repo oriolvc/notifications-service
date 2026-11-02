@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
-/** The notification type catalog, as seen from other contexts (e.g. distribution lists validating their type). */
+/**
+ * The notification context's published view of its type catalog: other contexts (distribution) use this, never
+ * {@link NotificationTypeRepository}. It exposes only {@link NotificationTypeRef} (id and code); schemas and templates
+ * stay private to this context.
+ */
 @Service
 public class NotificationTypeQuery {
 

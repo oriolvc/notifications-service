@@ -66,7 +66,10 @@ com.oriolvc.notificationsservice
 Rules:
 - Dependencies point inward: `infrastructure → application → domain`.
 - **Where a port lives:** repositories, and interfaces the domain model itself calls (e.g. `AddressValidator`, passed to `DistributionList.addMember`), go in `domain/ports`. Interfaces that only use cases call (sending through a channel, reading another context, recording metrics) go in `application/ports`. Exception: `ParametersValidator` stays with the rest of the parameter code in `domain/parameters`.
-- `notification` reaches `distribution` **only** through the `RecipientResolver` port. Never import `distribution.domain` or its repositories from `notification`. The reverse direction (validating a notification type code) goes through a query service in `notification.application`.
+- **Between contexts:** each context publishes one query service in its `application` layer, returning small records from `application/model`. The other context may use that service and nothing else: never another context's `domain` (aggregates, repositories) or `infrastructure`.
+  - `notification` → `distribution`: `ActiveRecipientsQuery`, read through notification's `RecipientResolver` port (adapter in `notification/infrastructure/distribution`), because the use cases depend on the port, not on the other context.
+  - `distribution` → `notification`: `NotificationTypeQuery`, returning `NotificationTypeRef(id, code)`. It checks a list's type when the list is created (only active types), turns a stored type id into its code for the API, and lists the types for the active-list gauges.
+  - Rules that belong to one context stay in its query service (e.g. "only active types accept new lists, but deactivated types still resolve"). Need more from the other context? Extend its query service and its `…Ref`; don't reach into its domain.
 - **Separate persistence model:** `domain` is plain Java, with no JPA, Envers or Spring Data annotations. Jackson 3 `JsonNode` is allowed there for JSON-shaped values (parameters, schemas). Per aggregate, `infrastructure/persistence` holds (all package-private):
   - `XxxDbo`: the `@Entity` (`@Audited`, `@Version`, audit columns via `AuditedDbo`)
   - `XxxDao`: the Spring Data interface over the DBO; it runs the queries

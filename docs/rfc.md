@@ -80,7 +80,9 @@ Single deployable, **hexagonal architecture**, two bounded contexts:
 | **Distribution** | Configure who receives what, per customer and channel | `DistributionList` (root) → `Member` |
 | **Notification** | Accept events, render, dispatch, track | `NotificationType` (+ templates), `Notification` (root) → `Delivery` → `DeliveryAttempt` |
 
-The Notification context reads recipients through a port (`RecipientResolver`) implemented by an adapter over the Distribution context's application service. There is no direct repository access across contexts.
+The contexts depend on each other only through one query service each, published in their application layer, and there is no direct repository access across contexts:
+- Notification reads recipients through a port (`RecipientResolver`) implemented by an adapter over Distribution's `ActiveRecipientsQuery`.
+- Distribution reads notification types through Notification's `NotificationTypeQuery`, which exposes only `NotificationTypeRef(id, code)`: to accept only active types for a new list, to show a list's type code, and for the active-list metric. The type's schema and templates stay private to Notification.
 
 Package layout per context: `domain` (aggregates and value objects; `ports` for repositories and the interfaces the model itself calls, `exceptions` for domain exceptions; plain Java) · `application` (use cases; `ports` for the interfaces only use cases call, such as `ChannelSender`, `RecipientResolver` and the metrics ports) · `infrastructure` (web, persistence, email, scheduling).
 

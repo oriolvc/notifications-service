@@ -209,6 +209,7 @@ T4→T5 and T6 are independent and can be done in parallel.
 - Group the notification domain's parameter code (schema, validation port, normalization, canonical JSON, the 422 exception) in a `parameters` package.
 - In every context's domain, move repository and other interfaces to `ports` and exceptions to `exceptions`.
 - Application-level ports (`ChannelSender`, `RecipientResolver`, the metrics ports) move to `application/ports`; the rule for where a port lives is in CLAUDE.md.
+- Document the cross-context query services (`ActiveRecipientsQuery`, `NotificationTypeQuery`) in CLAUDE.md and RFC §4.
 - Further cleanups as agreed during the task.
 
 **Done when:** `./mvnw verify` is green with the same tests, and the API, schema and RFC behaviour are unchanged.
